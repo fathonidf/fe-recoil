@@ -7,16 +7,18 @@ import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Checkbox } from "@/components/ui/checkbox"
-import { useRouter } from "next/navigation"
+import { useAuthContext } from "@/contexts/AuthContext"
+import { useRouter, useSearchParams } from "next/navigation"
 
 export default function LoginForm() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [rememberMe, setRememberMe] = useState(false)
   const [error, setError] = useState("")
-  const [isLoading, setIsLoading] = useState(false)
   
+  const { login, isLoading } = useAuthContext()
   const router = useRouter()
+  const searchParams = useSearchParams()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -27,15 +29,19 @@ export default function LoginForm() {
       return
     }
 
-    // Static demo - just simulate loading and redirect to home
-    setIsLoading(true)
-    
-    // Simulate API call delay
-    setTimeout(() => {
-      setIsLoading(false)
-      // For demo purposes, always "login successfully"
-      router.push('/')
-    }, 1000)
+    try {
+      const result = await login(email, password)
+      
+      if (result.success) {
+        // Redirect to the page user was trying to access, or home
+        const redirectUrl = searchParams.get('redirect') || '/'
+        router.push(redirectUrl)
+      } else {
+        setError(result.error || "Login failed")
+      }
+    } catch {
+      setError("An unexpected error occurred")
+    }
   }
 
   return (

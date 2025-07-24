@@ -7,6 +7,7 @@ import { Menu, X } from "lucide-react"
 import { useState, useEffect, useRef, useMemo } from "react"
 import { usePathname } from "next/navigation"
 import { useCallback } from "react"
+import { useAuthContext } from "@/contexts/AuthContext"
 
 export function Navigation() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
@@ -16,6 +17,7 @@ export function Navigation() {
   const [lastScrollY, setLastScrollY] = useState(0)
   const navRef = useRef<HTMLDivElement>(null)
   const pathname = usePathname()
+  const { isAuthenticated, logout, isLoading, user } = useAuthContext()
 
   const navItems = useMemo(() => [
     { href: "/#about", label: "About us", matchPath: "/" },
@@ -93,6 +95,11 @@ export function Navigation() {
     }
   }, [pathname, mounted, updateUnderline])
 
+  const handleLogout = async () => {
+    await logout()
+    setIsMobileMenuOpen(false)
+  }
+
   // Prevent hydration mismatch by using consistent classes initially
   if (!mounted) {
     return (
@@ -123,11 +130,28 @@ export function Navigation() {
 
         {/* Desktop Login Button */}
         <div className="hidden md:block">
-          <Link href="/login">
-            <Button className="bg-gradient-to-b from-[#04BB84] to-[#02A99D] hover:bg-gradient-to-r hover:from-[#FFE51C] hover:to-[#FFFECF] text-[#FFFECF] hover:text-[#123524] px-6 py-2 rounded-lg transition-all duration-300">
-              Log In
-            </Button>
-          </Link>
+          {isAuthenticated ? (
+            <div className="relative group">
+              {/* User Info Display */}
+              <div className="flex flex-col items-end cursor-pointer">
+                <span className="text-secondary font-semibold text-base">
+                  Hi, {user?.username || 'User'}!
+                </span>
+                <div className="bg-gradient-to-r from-[#04BB84] to-[#FFE51C] text-[#FFFECF] hover:bg-gradient-to-r hover:from-[#FFE51C] hover:to-[#FFFECF] text-[#FFFECF] hover:text-[#123524] px-8 py-3 rounded-lg text-lg transition-all duration-300 font-medium flex items-center space-x-1">
+                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
+                  </svg>
+                  <span>member</span>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <Link href="/login">
+              <Button className="bg-gradient-to-b from-[#04BB84] to-[#02A99D] hover:bg-gradient-to-r hover:from-[#FFE51C] hover:to-[#FFFECF] text-[#FFFECF] hover:text-[#123524] px-6 py-2 rounded-lg transition-all duration-300">
+                Log In
+              </Button>
+            </Link>
+          )}
         </div>
 
         {/* Mobile Menu Button */}
@@ -183,11 +207,53 @@ export function Navigation() {
 
       {/* Desktop Login Button */}
       <div className="hidden md:block">
-        <Link href="/login">
-          <Button className="bg-gradient-to-b from-[#04BB84] to-[#02A99D] hover:bg-gradient-to-r hover:from-[#FFE51C] hover:to-[#FFFECF] text-[#FFFECF] hover:text-[#123524] px-6 py-2 rounded-lg transition-all duration-300">
-            Log In
-          </Button>
-        </Link>
+        {isAuthenticated ? (
+          <div className="relative group">
+            {/* User Info Display */}
+            <div className="flex flex-col items-center cursor-pointer">
+              <span className="text-secondary font-semibold text-xl">
+                Hi, {user?.username || 'User'}!
+              </span>
+              <div className="bg-gradient-to-r from-[#04BB84] to-[#FFE51C] text-[#FFFECF] hover:bg-gradient-to-r hover:from-[#FFE51C] hover:to-[#FFFECF] text-white hover:text-[#123524] px-3 py-1 rounded-lg text-lg transition-all duration-300 font-medium flex items-center space-x-1">
+                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
+                </svg>
+                <span>member</span>
+              </div>
+            </div>
+
+            {/* Dropdown Menu */}
+            <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+              <div className="">
+                <Link
+                  href="/profile"
+                  className="flex items-center px-4 py-2 text-gray-700 hover:bg-gray-50 transition-colors"
+                >
+                  <svg className="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                  </svg>
+                  Profile
+                </Link>
+                <button
+                  onClick={handleLogout}
+                  disabled={isLoading}
+                  className="w-full flex items-center rounded-lg px-4 py-2 text-gray-700 hover:bg-red-500 hover:rounded-lg hover:text-white transition-colors disabled:opacity-50 cursor-pointer"
+                >
+                  <svg className="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3V1" />
+                  </svg>
+                  {isLoading ? 'Logging out...' : 'Log Out'}
+                </button>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <Link href="/login">
+            <Button className="bg-gradient-to-b from-[#04BB84] to-[#02A99D] hover:bg-gradient-to-r hover:from-[#FFE51C] hover:to-[#FFFECF] text-[#FFFECF] hover:text-[#123524] px-6 py-2 rounded-lg transition-all duration-300">
+              Log In
+            </Button>
+          </Link>
+        )}
       </div>
 
       {/* Mobile Menu Button */}
@@ -213,11 +279,44 @@ export function Navigation() {
                 {item.label}
               </Link>
             ))}
-            <Link href="/login" onClick={() => setIsMobileMenuOpen(false)} className="cursor-pointer">
-              <Button className="bg-gradient-to-b from-[#04BB84] to-[#02A99D] hover:bg-gradient-to-r hover:from-[#FFE51C] hover:to-[#FFFECF] text-[#FFFECF] hover:text-[#123524] px-6 py-2 rounded-lg w-full transition-all duration-300">
-                Log In
-              </Button>
-            </Link>
+            {isAuthenticated ? (
+              <div className="space-y-3">
+                <div className="flex flex-col items-center space-y-2 p-3 bg-gray-50 rounded-lg">
+                  <span className="text-primary font-semibold text-base">
+                    Hi, {user?.username || 'User'}!
+                  </span>
+                  <div className="bg-gradient-to-r from-[#04BB84] to-[#FFE51C] text-[#FFFECF] hover:bg-gradient-to-r hover:from-[#FFE51C] hover:to-[#FFFECF] text-[#FFFECF] hover:text-[#123524] px-8 py-3 rounded-lg text-lg transition-all duration-300 font-medium flex items-center space-x-1">
+                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
+                    </svg>
+                    <span>member</span>
+                  </div>
+                </div>
+                <Link
+                  href="/profile"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="flex items-center justify-center space-x-2 w-full p-3 text-primary border border-primary rounded-lg hover:bg-primary hover:text-white transition-colors"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                  </svg>
+                  <span>Profile</span>
+                </Link>
+                <Button 
+                  onClick={handleLogout}
+                  disabled={isLoading}
+                  className="w-full bg-red-500 hover:bg-red-600 text-white px-6 py-3 rounded-lg transition-all duration-300"
+                >
+                  {isLoading ? 'Logging out...' : 'Log Out'}
+                </Button>
+              </div>
+            ) : (
+              <Link href="/login" onClick={() => setIsMobileMenuOpen(false)} className="cursor-pointer">
+                <Button className="bg-gradient-to-b from-[#04BB84] to-[#02A99D] hover:bg-gradient-to-r hover:from-[#FFE51C] hover:to-[#FFFECF] text-[#FFFECF] hover:text-[#123524] px-6 py-2 rounded-lg w-full transition-all duration-300">
+                  Log In
+                </Button>
+              </Link>
+            )}
           </div>
         </div>
       )}
