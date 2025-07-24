@@ -12,6 +12,8 @@ export function Navigation() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [underlineStyle, setUnderlineStyle] = useState({ left: 0, width: 0 })
   const [mounted, setMounted] = useState(false)
+  const [isVisible, setIsVisible] = useState(true)
+  const [lastScrollY, setLastScrollY] = useState(0)
   const navRef = useRef<HTMLDivElement>(null)
   const pathname = usePathname()
 
@@ -26,6 +28,28 @@ export function Navigation() {
   useEffect(() => {
     setMounted(true)
   }, [])
+
+  // Handle scroll for navbar visibility
+  useEffect(() => {
+    if (!mounted) return
+
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY
+      
+      // Show navbar if scrolling up or at top, hide if scrolling down
+      if (currentScrollY < lastScrollY || currentScrollY < 10) {
+        setIsVisible(true)
+      } else if (currentScrollY > lastScrollY && currentScrollY > 100) {
+        setIsVisible(false)
+        setIsMobileMenuOpen(false) // Close mobile menu when hiding navbar
+      }
+      
+      setLastScrollY(currentScrollY)
+    }
+
+    window.addEventListener('scroll', handleScroll, { passive: true })
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [mounted, lastScrollY])
 
   const isActive = useCallback((matchPath: string) => {
     if (!mounted) return false
@@ -72,7 +96,7 @@ export function Navigation() {
   // Prevent hydration mismatch by using consistent classes initially
   if (!mounted) {
     return (
-      <nav className="flex items-center justify-between px-6 py-4 relative">
+      <nav className="fixed top-0 left-0 right-0 bg-white/95 backdrop-blur-sm shadow-sm z-20 flex items-center justify-between px-6 py-4 transition-transform duration-300">
         {/* Logo */}
         <Link href="/" className="flex items-center space-x-2 cursor-pointer">
           <Image
@@ -116,7 +140,9 @@ export function Navigation() {
 
   // Client render with enhanced features
   return (
-    <nav className="flex items-center justify-between px-6 py-4 relative">
+    <nav className={`fixed top-0 left-0 right-0 bg-white/80 backdrop-blur-lg shadow-sm z-20 flex items-center justify-between px-6 py-4 transition-transform duration-300 ${
+      isVisible ? 'translate-y-0' : '-translate-y-full'
+    }`}>
       {/* Logo */}
       <Link href="/" className="flex items-center space-x-2 cursor-pointer">
         <Image

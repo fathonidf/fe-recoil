@@ -18,7 +18,7 @@ export default function ConditionalLayout({ children }: { children: React.ReactN
       {/* Main Content */}
       <div className="relative z-10 flex flex-col min-h-screen">
         {showNavigationFooter && <Navigation />}
-        <main className="flex-1">
+        <main className={`flex-1 ${showNavigationFooter ? 'pt-20' : ''}`}>
           {children}
         </main>
         {showNavigationFooter && <Footer />}
