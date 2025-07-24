@@ -1,5 +1,7 @@
 // Services
 export { authService } from './auth.service'
+export { profileService } from './profile.service'
+export { chatbotService } from './chatbot.service'
 
 // Base service for extending
 export { BaseService } from './base.service'
