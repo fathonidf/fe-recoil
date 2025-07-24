@@ -7,7 +7,7 @@ import { AuthProvider } from "@/contexts/AuthContext"
 export const metadata: Metadata = {
   title: "ReCoil - Turn Waste Into Worth",
   description:
-    "Ubah limbah cair jadi cuan dengan mudah. ReCoil menghubungkan Anda dengan agen daur ulang terpercaya untuk bumi yang lebih hijau.",
+    "Easily turn liquid waste into cash. ReCoil connects you with trusted recycling agents for a greener planet.",
 }
 
 export default function RootLayout({
