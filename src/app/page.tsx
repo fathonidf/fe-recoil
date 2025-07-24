@@ -27,7 +27,9 @@ export default function LandingPage() {
           </div>
 
           <div className="space-y-6">
-            <h1 className="text-5xl lg:text-6xl font-bold text-black leading-tight">Turn Waste Into Worth!</h1>
+            <h1 className="text-7xl lg:text-7xl font-bold text-black leading-tight">
+              Waste Not,<br />Earn A Lot.
+            </h1>
             <p className="text-lg text-text-muted max-w-md">
               Easily turn liquid waste into cash. ReCoil connects you with trusted recycling agents for a greener planet.
             </p>
