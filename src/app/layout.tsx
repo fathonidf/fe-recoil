@@ -2,6 +2,7 @@ import type React from "react"
 import type { Metadata } from "next"
 import "./globals.css"
 import ConditionalLayout from "../components/conditional-layout"
+import { AuthProvider } from "@/contexts/AuthContext"
 
 export const metadata: Metadata = {
   title: "ReCoil - Turn Waste Into Worth",
@@ -17,7 +18,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`font-poppins`}>
-        <ConditionalLayout>{children}</ConditionalLayout>
+        <AuthProvider>
+          <ConditionalLayout>{children}</ConditionalLayout>
+        </AuthProvider>
       </body>
     </html>
   )
