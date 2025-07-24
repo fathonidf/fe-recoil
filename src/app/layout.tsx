@@ -5,7 +5,7 @@ import ConditionalLayout from "../components/conditional-layout"
 import { AuthProvider } from "@/contexts/AuthContext"
 
 export const metadata: Metadata = {
-  title: "ReCoil - Turn Waste Into Worth",
+  title: "ReCoil - Waste Not, Earn A Lot.",
   description:
     "Easily turn liquid waste into cash. ReCoil connects you with trusted recycling agents for a greener planet.",
 }
