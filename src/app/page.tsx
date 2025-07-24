@@ -19,10 +19,10 @@ export default function LandingPage() {
         <div className="grid lg:grid-cols-2 gap-12 items-center">
           <div className="relative">
             <Image
-              src="/landing_page/illustration landing page.svg"
+              src="/landing_page/illustration landing page.png"
               alt="People with recycling illustration"
-              width={500}
-              height={400}
+              width={600}
+              height={500}
             />
           </div>
 
