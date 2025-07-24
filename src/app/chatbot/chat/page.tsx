@@ -38,7 +38,7 @@ export default function ChatPage() {
     }
 
     return (
-        <div className="min-h-screen bg-white relative">
+        <div className="min-h-[50vh] bg-white relative">
             {/* Background blob - dengan z-index 0 dan pointer-events-none agar tidak menghalangi klik */}
             <div className="fixed inset-0 z-0 overflow-hidden pointer-events-none">
                 <div className="relative h-full w-full">
@@ -54,7 +54,7 @@ export default function ChatPage() {
             </div>
 
             {/* Chat Area */}
-            <div className="relative z-10 flex items-center justify-center h-screen">
+            <div className="relative z-10 flex items-center justify-center min-h-[50vh]">
                 <ChatHistory
                     messages={messages}
                     isSending={isSending}

@@ -85,7 +85,7 @@ export default function ChatHistory({
     }
 
     return (
-        <div className="relative h-screen bg-transparent w-2/3">
+        <div className="relative h-[90vh] bg-transparent w-2/3">
             {/* Scrollable chat area */}
             <div
                 ref={scrollContainerRef}
@@ -99,25 +99,12 @@ export default function ChatHistory({
                             <div className="mb-6 flex justify-center">
                                 <div className="flex space-x-2">
                                     <Image
-                                        src="/eco character.svg"
-                                        alt="Eco AI Character 1"
-                                        width={60}
-                                        height={60}
+                                        src="/chatbot_page/chatbot droplets.svg"
+                                        alt="Droplets AI"
+                                        width={100}
+                                        height={100}
                                         className="object-contain"
-                                    />
-                                    <Image
-                                        src="/eco character.svg"
-                                        alt="Eco AI Character 2"
-                                        width={80}
-                                        height={80}
-                                        className="object-contain"
-                                    />
-                                    <Image
-                                        src="/eco character.svg"
-                                        alt="Eco AI Character 3"
-                                        width={60}
-                                        height={60}
-                                        className="object-contain"
+                                        priority
                                     />
                                 </div>
                             </div>

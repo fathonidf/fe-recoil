@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button"
 
 export function Footer() {
   return (
-    <footer className="bg-[#91E1D1] text-white py-8 border-t-16 border-[#FFFFE4]">
+    <footer className="bg-[#91E1D1] text-white py-8 border-t-16 border-[#FFFFE4] z-30">
       <div className="container mx-auto px-6">
         <div className="grid md:grid-cols-4 gap-8">
           {/* Logo Section */}
