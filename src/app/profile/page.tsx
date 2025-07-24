@@ -10,6 +10,7 @@ export default function ProfilePage() {
   const { user, isAuthenticated, fetchProfile, logout, isLoading } = useAuthContext()
   const [isLoadingProfile, setIsLoadingProfile] = useState(false)
   const [error, setError] = useState('')
+  const [isMapExpanded, setIsMapExpanded] = useState(false)
 
   const loadProfile = useCallback(async () => {
     setIsLoadingProfile(true)
@@ -164,14 +165,12 @@ export default function ProfilePage() {
           <div className="flex flex-col items-center text-center mb-6">
             <div className="flex items-center gap-3">
               <h2 className="text-2xl font-bold text-gray-800">My Location</h2>
-              {/* <div className="w-8 h-8 bg-[#04BB84] rounded-full flex items-center justify-center"> */}
               <Image
                 src="/profile_page/my location icon.svg"
                 alt="Location Icon"
                 width={40}
                 height={40}
               />
-              {/* </div> */}
             </div>
             <p className="text-gray-600 text-lg">
               {user?.alamat || 'Address not provided'}
@@ -180,16 +179,44 @@ export default function ProfilePage() {
 
           {/* Google Maps Embed */}
           {user?.latitude && user?.longitude ? (
-            <div className="w-full h-64 rounded-lg overflow-hidden shadow-md">
-              <iframe
-                width="100%"
-                height="100%"
-                style={{ border: 0 }}
-                loading="lazy"
-                allowFullScreen
-                referrerPolicy="no-referrer-when-downgrade"
-                src={`https://www.google.com/maps/embed/v1/place?key=${process.env.NEXT_PUBLIC_GOOGLE_API_KEY}&q=${user.latitude},${user.longitude}&zoom=15&maptype=roadmap`}
-              />
+            <div className="relative">
+              <div 
+                className={`w-full rounded-lg overflow-hidden shadow-md transition-all duration-700 ease-in-out ${
+                  isMapExpanded ? 'h-[60vh]' : 'h-64'
+                }`}
+              >
+                <iframe
+                  width="100%"
+                  height="100%"
+                  style={{ border: 0 }}
+                  loading="lazy"
+                  allowFullScreen
+                  referrerPolicy="no-referrer-when-downgrade"
+                  src={`https://www.google.com/maps/embed/v1/place?key=${process.env.NEXT_PUBLIC_GOOGLE_API_KEY}&q=${user.latitude},${user.longitude}&zoom=15&maptype=roadmap`}
+                />
+              </div>
+              
+              {/* Expand/Collapse Button */}
+              <button
+                onClick={() => setIsMapExpanded(!isMapExpanded)}
+                className="absolute top-4 right-4 bg-secondary hover:bg-[#FFE51C] text-white hover:text-gray-800 rounded-lg p-1 shadow-lg transition-all duration-300 hover:shadow-xl z-10 group cursor-pointer"
+                aria-label={isMapExpanded ? "Collapse map" : "Expand map"}
+              >
+                <svg 
+                  className={`w-5 h-5 transition-transform duration-300 ${
+                    isMapExpanded ? 'rotate-180' : 'rotate-0'
+                  }`} 
+                  fill="none" 
+                  stroke="currentColor" 
+                  viewBox="0 0 24 24"
+                >
+                  {isMapExpanded ? (
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  ) : (
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
+                  )}
+                </svg>
+              </button>
             </div>
           ) : (
             <div className="w-full h-64 bg-gray-100 rounded-lg flex items-center justify-center">
