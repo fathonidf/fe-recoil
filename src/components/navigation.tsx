@@ -13,25 +13,45 @@ export function Navigation() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [underlineStyle, setUnderlineStyle] = useState({ left: 0, width: 0 })
   const [mounted, setMounted] = useState(false)
+  const [isVisible, setIsVisible] = useState(true)
+  const [lastScrollY, setLastScrollY] = useState(0)
   const navRef = useRef<HTMLDivElement>(null)
   const pathname = usePathname()
   const { isAuthenticated, logout, isLoading, user } = useAuthContext()
 
-  const navItems = useMemo(() => {
-    const baseItems = [
-      { href: "/#about", label: "About us", matchPath: "/" },
-      { href: "/exchange", label: "Eco Exchange", matchPath: "/exchange" },
-      { href: "/community", label: "Community", matchPath: "/community" },
-      { href: "/chatbot", label: "AI Chatbot", matchPath: "/chatbot" },
-    ]
-    
-    return baseItems
-  }, [])
+  const navItems = useMemo(() => [
+    { href: "/#about", label: "About us", matchPath: "/" },
+    { href: "/exchange", label: "Eco Exchange", matchPath: "/exchange" },
+    { href: "/community", label: "Community", matchPath: "/community" },
+    { href: "/chatbot", label: "AI Chatbot", matchPath: "/chatbot" },
+  ], [])
 
   // Only run on client after mount
   useEffect(() => {
     setMounted(true)
   }, [])
+
+  // Handle scroll for navbar visibility
+  useEffect(() => {
+    if (!mounted) return
+
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY
+      
+      // Show navbar if scrolling up or at top, hide if scrolling down
+      if (currentScrollY < lastScrollY || currentScrollY < 10) {
+        setIsVisible(true)
+      } else if (currentScrollY > lastScrollY && currentScrollY > 100) {
+        setIsVisible(false)
+        setIsMobileMenuOpen(false) // Close mobile menu when hiding navbar
+      }
+      
+      setLastScrollY(currentScrollY)
+    }
+
+    window.addEventListener('scroll', handleScroll, { passive: true })
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [mounted, lastScrollY])
 
   const isActive = useCallback((matchPath: string) => {
     if (!mounted) return false
@@ -83,7 +103,7 @@ export function Navigation() {
   // Prevent hydration mismatch by using consistent classes initially
   if (!mounted) {
     return (
-      <nav className="flex items-center justify-between px-6 py-4 relative bg-transparent">
+      <nav className="fixed top-0 left-0 right-0 bg-white/95 backdrop-blur-sm shadow-sm z-20 flex items-center justify-between px-6 py-4 transition-transform duration-300">
         {/* Logo */}
         <Link href="/" className="flex items-center space-x-2 cursor-pointer">
           <Image
@@ -96,26 +116,16 @@ export function Navigation() {
         </Link>
 
         {/* Desktop Navigation - Server render with consistent classes */}
-        <div className="hidden md:flex items-center space-x-8 relative">
+        <div className="hidden md:flex items-center space-x-8">
           {navItems.map((item) => (
             <Link 
               key={item.href} 
               href={item.href} 
-              className="text-primary hover:text-primary transition-colors cursor-pointer relative z-10"
+              className="text-secondary hover:text-primary transition-colors cursor-pointer"
             >
               {item.label}
             </Link>
           ))}
-          
-          {/* Placeholder for animated underline */}
-          <div 
-            className="absolute bottom-0 h-0.5 bg-primary transition-all duration-300 ease-out"
-            style={{
-              left: 0,
-              width: 0,
-              transform: 'translateY(8px)'
-            }}
-          />
         </div>
 
         {/* Desktop Login Button */}
@@ -145,7 +155,7 @@ export function Navigation() {
         </div>
 
         {/* Mobile Menu Button */}
-        <button className="md:hidden text-primary cursor-pointer" onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}>
+        <button className="md:hidden text-secondary cursor-pointer" onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}>
           {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
         </button>
       </nav>
@@ -154,7 +164,9 @@ export function Navigation() {
 
   // Client render with enhanced features
   return (
-    <nav className="flex items-center justify-between px-6 py-4 relative bg-transparent">
+    <nav className={`fixed top-0 left-0 right-0 bg-white/80 backdrop-blur-lg shadow-sm z-20 flex items-center justify-between px-6 py-4 transition-transform duration-300 ${
+      isVisible ? 'translate-y-0' : '-translate-y-full'
+    }`}>
       {/* Logo */}
       <Link href="/" className="flex items-center space-x-2 cursor-pointer">
         <Image
@@ -175,7 +187,7 @@ export function Navigation() {
             className={`transition-colors cursor-pointer relative z-10 ${
               isActive(item.matchPath)
                 ? "text-primary font-bold"
-                : "text-primary hover:text-primary"
+                : "text-secondary hover:text-primary"
             }`}
           >
             {item.label}
@@ -193,57 +205,59 @@ export function Navigation() {
         />
       </div>
 
-        {/* Desktop Login Button */}
-        <div className="hidden md:block">
-          {isAuthenticated ? (
-            <div className="relative group">
-              {/* User Info Display */}
-              <div className="flex flex-col items-center cursor-pointer">
-                <span className="text-secondary font-semibold text-xl">
-                  Hi, {user?.username || 'User'}!
-                </span>
-                <div className="bg-gradient-to-r from-[#04BB84] to-[#FFE51C] text-[#FFFECF] hover:bg-gradient-to-r hover:from-[#FFE51C] hover:to-[#FFFECF] text-white hover:text-[#123524] px-3 py-1 rounded-lg text-lg transition-all duration-300 font-medium flex items-center space-x-1">
-                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
-                  </svg>
-                  <span>member</span>
-                </div>
-              </div>
-
-              {/* Dropdown Menu */}
-              <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
-                <div className="">
-                  <Link
-                    href="/profile"
-                    className="flex items-center px-4 py-2 text-gray-700 hover:bg-gray-50 transition-colors"
-                  >
-                    <svg className="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                    </svg>
-                    Profile
-                  </Link>
-                    <button
-                    onClick={handleLogout}
-                    disabled={isLoading}
-                    className="w-full flex items-center rounded-lg px-4 py-2 text-gray-700 hover:bg-red-500 hover:rounded-lg hover:text-white transition-colors disabled:opacity-50 cursor-pointer"
-                    >
-                    <svg className="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3V1" />
-                    </svg>
-                    {isLoading ? 'Logging out...' : 'Log Out'}
-                  </button>
-                </div>
+      {/* Desktop Login Button */}
+      <div className="hidden md:block">
+        {isAuthenticated ? (
+          <div className="relative group">
+            {/* User Info Display */}
+            <div className="flex flex-col items-center cursor-pointer">
+              <span className="text-secondary font-semibold text-xl">
+                Hi, {user?.username || 'User'}!
+              </span>
+              <div className="bg-gradient-to-r from-[#04BB84] to-[#FFE51C] text-[#FFFECF] hover:bg-gradient-to-r hover:from-[#FFE51C] hover:to-[#FFFECF] text-white hover:text-[#123524] px-3 py-1 rounded-lg text-lg transition-all duration-300 font-medium flex items-center space-x-1">
+                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
+                </svg>
+                <span>member</span>
               </div>
             </div>
-          ) : (
-            <Link href="/login">
-              <Button className="bg-gradient-to-b from-[#04BB84] to-[#02A99D] hover:bg-gradient-to-r hover:from-[#FFE51C] hover:to-[#FFFECF] text-[#FFFECF] hover:text-[#123524] px-6 py-2 rounded-lg transition-all duration-300">
-                Log In
-              </Button>
-            </Link>
-          )}
-        </div>      {/* Mobile Menu Button */}
-      <button className="md:hidden text-primary cursor-pointer" onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}>
+
+            {/* Dropdown Menu */}
+            <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+              <div className="">
+                <Link
+                  href="/profile"
+                  className="flex items-center px-4 py-2 text-gray-700 hover:bg-gray-50 transition-colors"
+                >
+                  <svg className="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                  </svg>
+                  Profile
+                </Link>
+                <button
+                  onClick={handleLogout}
+                  disabled={isLoading}
+                  className="w-full flex items-center rounded-lg px-4 py-2 text-gray-700 hover:bg-red-500 hover:rounded-lg hover:text-white transition-colors disabled:opacity-50 cursor-pointer"
+                >
+                  <svg className="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3V1" />
+                  </svg>
+                  {isLoading ? 'Logging out...' : 'Log Out'}
+                </button>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <Link href="/login">
+            <Button className="bg-gradient-to-b from-[#04BB84] to-[#02A99D] hover:bg-gradient-to-r hover:from-[#FFE51C] hover:to-[#FFFECF] text-[#FFFECF] hover:text-[#123524] px-6 py-2 rounded-lg transition-all duration-300">
+              Log In
+            </Button>
+          </Link>
+        )}
+      </div>
+
+      {/* Mobile Menu Button */}
+      <button className="md:hidden text-secondary cursor-pointer" onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}>
         {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
       </button>
 
@@ -258,7 +272,7 @@ export function Navigation() {
                 className={`transition-colors cursor-pointer ${
                   isActive(item.matchPath)
                     ? "text-primary font-bold underline decoration-2 underline-offset-4"
-                    : "text-primary hover:text-primary"
+                    : "text-secondary hover:text-primary"
                 }`}
                 onClick={() => setIsMobileMenuOpen(false)}
               >
