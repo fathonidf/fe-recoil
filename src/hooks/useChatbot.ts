@@ -40,7 +40,6 @@ export function useChatbot() {
           ...prev,
           messages: response.data!.messages,
           sessions: response.data!.all_sessions,
-          currentSessionId: response.data!.current_session.session_id,
           isLoadingHistory: false
         }))
         
@@ -168,7 +167,6 @@ export function useChatbot() {
           ...prev,
           messages: response.data!.messages,
           sessions: response.data!.all_sessions,
-          currentSessionId: response.data!.current_session.session_id,
           isLoading: false
         }))
         
