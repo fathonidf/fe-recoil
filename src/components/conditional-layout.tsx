@@ -9,6 +9,7 @@ import BackgroundVectors from "@/components/background-vectors"
 export default function ConditionalLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
   const showNavigationFooter = pathname !== '/login' && pathname !== '/register'
+  const showFooter = showNavigationFooter && pathname !== '/chatbot/chat'
 
   return (
     <div className="min-h-screen flex flex-col relative overflow-x-hidden">
@@ -21,7 +22,7 @@ export default function ConditionalLayout({ children }: { children: React.ReactN
         <main className={`flex-1 ${showNavigationFooter ? 'pt-20' : ''}`}>
           {children}
         </main>
-        {showNavigationFooter && <Footer />}
+        {showFooter && <Footer />}
       </div>
     </div>
   )
