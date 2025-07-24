@@ -9,12 +9,15 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Label } from "@/components/ui/label"
+import { AuthService } from "@/services/auth.service"
+import { useRouter } from "next/navigation"
 
 export default function RegisterPage() {
   const [formData, setFormData] = useState({
     username: "",
     fullName: "",
     email: "",
+    gender: "",
     phone: "",
     address: "",
     province: "",
@@ -25,14 +28,65 @@ export default function RegisterPage() {
     verification: "",
   })
 
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState("")
+  const router = useRouter()
+  const authService = AuthService.getInstance()
+
   const handleInputChange = (field: string, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }))
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    // Handle registration logic here
-    console.log(formData)
+    setError("")
+
+    // Validation
+    if (formData.password !== formData.verification) {
+      setError("Passwords do not match")
+      return
+    }
+
+    if (!formData.gender) {
+      setError("Please select your gender")
+      return
+    }
+
+    if (formData.userType === "agent" && !formData.companyName) {
+      setError("Company name is required for agents")
+      return
+    }
+
+    setIsLoading(true)
+
+    try {
+      // Prepare payload for API
+      const registerPayload = {
+        email: formData.email,
+        password: formData.password,
+        password_confirm: formData.verification,
+        username: formData.username,
+        phone_number: formData.phone,
+        alamat: `${formData.address}, ${formData.city}, ${formData.province}`,
+        gender: formData.gender === "male" ? "Men" : "Women",
+        is_agent: formData.userType === "agent" ? "True" : "False",
+        ...(formData.userType === "agent" && { company_name: formData.companyName })
+      }
+
+      const response = await authService.register(registerPayload)
+
+      if (response.success) {
+        // Registration successful, redirect to login
+        router.push('/login?message=Registration successful! Please login.')
+      } else {
+        setError(response.error || "Registration failed")
+      }
+    } catch (err) {
+      setError("An unexpected error occurred")
+      console.error('Registration error:', err)
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   return (
@@ -66,6 +120,12 @@ export default function RegisterPage() {
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-6">
+            {error && (
+              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md">
+                {error}
+              </div>
+            )}
+            
             {/* Username */}
             <div className="space-y-2">
               <label className="text-secondary font-medium">Username</label>
@@ -74,6 +134,7 @@ export default function RegisterPage() {
                 value={formData.username}
                 onChange={(e) => handleInputChange("username", e.target.value)}
                 className="border-secondary/30 focus:border-secondary"
+                disabled={isLoading}
                 required
               />
             </div>
@@ -86,6 +147,7 @@ export default function RegisterPage() {
                 value={formData.fullName}
                 onChange={(e) => handleInputChange("fullName", e.target.value)}
                 className="border-secondary/30 focus:border-secondary"
+                disabled={isLoading}
                 required
               />
             </div>
@@ -100,6 +162,7 @@ export default function RegisterPage() {
                   value={formData.email}
                   onChange={(e) => handleInputChange("email", e.target.value)}
                   className="border-secondary/30 focus:border-secondary"
+                  disabled={isLoading}
                   required
                 />
               </div>
@@ -111,9 +174,30 @@ export default function RegisterPage() {
                   value={formData.phone}
                   onChange={(e) => handleInputChange("phone", e.target.value)}
                   className="border-secondary/30 focus:border-secondary"
+                  disabled={isLoading}
                   required
                 />
               </div>
+            </div>
+
+            {/* Gender */}
+            <div className="space-y-3">
+              <label className="text-secondary font-medium">Gender</label>
+              <RadioGroup
+                value={formData.gender}
+                onValueChange={(value) => handleInputChange("gender", value)}
+                className="flex space-x-6"
+                disabled={isLoading}
+              >
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="male" id="male" />
+                  <Label htmlFor="male">Male</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="female" id="female" />
+                  <Label htmlFor="female">Female</Label>
+                </div>
+              </RadioGroup>
             </div>
 
             {/* Address */}
@@ -124,6 +208,7 @@ export default function RegisterPage() {
                 value={formData.address}
                 onChange={(e) => handleInputChange("address", e.target.value)}
                 className="border-secondary/30 focus:border-secondary"
+                disabled={isLoading}
                 required
               />
             </div>
@@ -137,6 +222,7 @@ export default function RegisterPage() {
                   value={formData.province}
                   onChange={(e) => handleInputChange("province", e.target.value)}
                   className="border-secondary/30 focus:border-secondary"
+                  disabled={isLoading}
                   required
                 />
               </div>
@@ -147,6 +233,7 @@ export default function RegisterPage() {
                   value={formData.city}
                   onChange={(e) => handleInputChange("city", e.target.value)}
                   className="border-secondary/30 focus:border-secondary"
+                  disabled={isLoading}
                   required
                 />
               </div>
@@ -159,6 +246,7 @@ export default function RegisterPage() {
                 value={formData.userType}
                 onValueChange={(value) => handleInputChange("userType", value)}
                 className="flex space-x-6"
+                disabled={isLoading}
               >
                 <div className="flex items-center space-x-2">
                   <RadioGroupItem value="member" id="member" />
@@ -180,6 +268,7 @@ export default function RegisterPage() {
                   value={formData.companyName}
                   onChange={(e) => handleInputChange("companyName", e.target.value)}
                   className="border-secondary/30 focus:border-secondary"
+                  disabled={isLoading}
                   required
                 />
               </div>
@@ -195,6 +284,7 @@ export default function RegisterPage() {
                   value={formData.password}
                   onChange={(e) => handleInputChange("password", e.target.value)}
                   className="border-secondary/30 focus:border-secondary"
+                  disabled={isLoading}
                   required
                 />
               </div>
@@ -202,17 +292,22 @@ export default function RegisterPage() {
                 <label className="text-secondary font-medium">Verification</label>
                 <Input
                   type="password"
-                  placeholder="Enter your password"
+                  placeholder="Confirm your password"
                   value={formData.verification}
                   onChange={(e) => handleInputChange("verification", e.target.value)}
                   className="border-secondary/30 focus:border-secondary"
+                  disabled={isLoading}
                   required
                 />
               </div>
             </div>
 
-            <Button type="submit" className="w-1/2 text-white py-3 hover:bg-gradient-to-r hover:from-[#FFE51C] hover:to-[#FFFECF] text-[#FFFECF] hover:text-[#123524] px-8 py-3 rounded-lg transition-all duration-300 rounded-lg">
-              Continue
+            <Button 
+              type="submit" 
+              className="w-1/2 bg-primary text-white py-3 hover:bg-gradient-to-r hover:from-[#FFE51C] hover:to-[#FFFECF] text-[#FFFECF] hover:text-[#123524] px-8 py-3 rounded-lg transition-all duration-300"
+              disabled={isLoading}
+            >
+              {isLoading ? 'Creating Account...' : 'Continue'}
             </Button>
           </form>
 

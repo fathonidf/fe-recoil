@@ -1,14 +1,23 @@
 export interface User {
   id: number
-  email: string
   username: string
+  email: string
   phone_number: string
   points: number
   wallet: string
   alamat: string
-  email_verified: boolean
-  profile_picture: string | null
+  profile_picture: string
   is_oauth_user: boolean
+  latitude: number
+  longitude: number
+  address_id: string
+  gender: string
+  is_agent: boolean
+  email_verified: boolean
+}
+
+export interface Agent {
+  id: number
 }
 
 export interface LoginRequest {
@@ -19,10 +28,12 @@ export interface LoginRequest {
 export interface LoginResponse {
   message: string
   tokens: {
-    access: string
     refresh: string
+    access: string
   }
   user: User
+  is_agent: boolean
+  agent?: Agent
 }
 
 export interface LogoutRequest {
@@ -40,8 +51,13 @@ export interface RefreshTokenResponse {
 export interface RegisterRequest {
   email: string
   password: string
+  password_confirm: string
   username: string
   phone_number: string
+  alamat: string
+  gender: string
+  is_agent?: string // "True" or "False"
+  company_name?: string
 }
 
 export interface RegisterResponse {
