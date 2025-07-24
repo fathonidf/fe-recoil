@@ -22,16 +22,16 @@ export function Footer() {
           <div>
             <h4 className="font-semibold mb-4 text-2xl">Quick Links</h4>
             <div className="space-y-2">
-              <Link href="#about" className="block hover:text-tertiary transition-colors">
+              <Link href="/#about" className="block hover:text-tertiary transition-colors">
                 About us
               </Link>
-              <Link href="#exchange" className="block hover:text-tertiary transition-colors">
+              <Link href="/exchange" className="block hover:text-tertiary transition-colors">
                 Eco Exchange
               </Link>
-              <Link href="#community" className="block hover:text-tertiary transition-colors">
+              <Link href="/community" className="block hover:text-tertiary transition-colors">
                 Community
               </Link>
-              <Link href="#chatbot" className="block hover:text-tertiary transition-colors">
+              <Link href="/chatbot" className="block hover:text-tertiary transition-colors">
                 AI Chatbot
               </Link>
             </div>
@@ -41,16 +41,16 @@ export function Footer() {
           <div>
             <h4 className="font-semibold mb-4 text-2xl">Developers</h4>
             <div className="space-y-2">
-              <Link href="#" className="block hover:text-tertiary transition-colors">
+              <Link href="https://www.linkedin.com/in/tsabit-coda-rafisukmawan/" className="block hover:text-tertiary transition-colors" target="_blank">
                 Code
               </Link>
-              <Link href="#" className="block hover:text-tertiary transition-colors">
+              <Link href="https://www.linkedin.com/in/edbert-halim/" className="block hover:text-tertiary transition-colors" target="_blank">
                 Edbert
               </Link>
-              <Link href="#" className="block hover:text-tertiary transition-colors">
+              <Link href="https://www.daffafathoni.com/about" className="block hover:text-tertiary transition-colors" target="_blank">
                 Dafton
               </Link>
-              <Link href="#" className="block hover:text-tertiary transition-colors">
+              <Link href="https://georgina-elena-portofolio.framer.website/" className="block hover:text-tertiary transition-colors" target="_blank">
                 Elena
               </Link>
             </div>
@@ -68,7 +68,7 @@ export function Footer() {
 
         {/* Copyright */}
         <div className="border-t border-white/20 mt-12 pt-8 text-center">
-          <p className="text-sm text-white/80">© 2024 ReCoil. All rights reserved.</p>
+          <p className="text-sm text-white/80">© 2025 ReCoil. All rights reserved.</p>
         </div>
       </div>
     </footer>
