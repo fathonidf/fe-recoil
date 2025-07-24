@@ -211,10 +211,10 @@ export function Navigation() {
           <div className="relative group">
             {/* User Info Display */}
             <div className="flex flex-col items-center cursor-pointer">
-              <span className="text-secondary font-semibold text-xl">
+              <span className="text-secondary font-semibold text-md">
                 Hi, {user?.username || 'User'}!
               </span>
-              <div className="bg-gradient-to-r from-[#04BB84] to-[#FFE51C] text-[#FFFECF] hover:bg-gradient-to-r hover:from-[#FFE51C] hover:to-[#FFFECF] text-white hover:text-[#123524] px-3 py-1 rounded-lg text-lg transition-all duration-300 font-medium flex items-center space-x-1">
+              <div className="bg-gradient-to-r from-[#04BB84] to-[#FFE51C] text-[#FFFECF] hover:bg-gradient-to-r hover:from-[#FFE51C] hover:to-[#FFFECF] text-white hover:text-[#123524] px-2 py-1 rounded-lg text-md transition-all duration-300 font-medium flex items-center space-x-1">
                 <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
                 </svg>
