@@ -1,17 +1,16 @@
 "use client"
 
-import { fetchItemDetail } from '@/services/itemDetail.service';
 import { fetchSellerProfile, SellerProfile } from '@/services/sellerProfile.service';
 import { addToCart } from '@/services/cart.service';
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useEffect, useState, useCallback } from 'react';
 import axios from "@/lib/axios";
-
+import Image from 'next/image';
 import * as React from 'react';
 import { useAuthContext } from '@/contexts/AuthContext';
+import { fetchItemDetail } from '@/services/itemDetail.service';
 
 export default function ItemDetailPage({ params }: { params: Promise<{ itemId: string }> }) {
-    const { user, isAuthenticated, fetchProfile, logout, isLoading } = useAuthContext()
+    const { user } = useAuthContext();
     
   type Item = {
     id: number;
@@ -44,38 +43,32 @@ export default function ItemDetailPage({ params }: { params: Promise<{ itemId: s
   const unwrappedParams = React.use(params);
   const itemId = unwrappedParams.itemId;
 
-  // TODO: Replace this with your actual user context/hook
-//   const user = null; // e.g. useUser() or get from context/provider
-  const router = useRouter();
+  const fetchData = useCallback(async () => {
+    try {
+      const data = await fetchItemDetail(itemId);
+      setItem(data);
+      setQty(1);
+      let sellerProfile = null;
+      try {
+        if (data.agent_id) {
+          sellerProfile = await fetchSellerProfile(true, data.agent_id);
+        } else if (data.member_id) {
+          sellerProfile = await fetchSellerProfile(false, data.member_id);
+        }
+      } catch {
+        console.error('Failed to fetch seller profile');
+      }
+      setSeller(sellerProfile);
+    } catch {
+      setError('Failed to load item details');
+    } finally {
+      setLoading(false);
+    }
+  }, [itemId]);
 
   useEffect(() => {
-    let ignore = false;
-    async function fetchData() {
-      try {
-        const data = await fetchItemDetail(itemId);
-        if (ignore) return;
-        setItem(data);
-        setQty(1);
-        let sellerProfile = null;
-        try {
-          if (data.agent_id) {
-            sellerProfile = await fetchSellerProfile(true, data.agent_id);
-          } else if (data.member_id) {
-            sellerProfile = await fetchSellerProfile(false, data.member_id);
-          }
-        } catch {
-          console.error('Failed to fetch seller profile');
-        }
-        if (!ignore) setSeller(sellerProfile);
-      } catch {
-        if (!ignore) setError('Failed to load item details');
-      } finally {
-        if (!ignore) setLoading(false);
-      }
-    }
     fetchData();
-    return () => { ignore = true; };
-  }, [itemId]);
+  }, [fetchData]);
 
   if (loading) return <div className="text-center py-10 text-gray-500">Loading...</div>;
   if (error) return <div className="text-center py-10 text-red-500">{error}</div>;
@@ -90,7 +83,13 @@ export default function ItemDetailPage({ params }: { params: Promise<{ itemId: s
           {/* Image */}
           <div className="flex-shrink-0 flex items-center justify-center w-full md:w-64">
             {item.image_url ? (
-              <img src={item.image_url} alt={item.name} className="rounded-lg w-full max-w-xs object-contain" />
+              <Image 
+                src={item.image_url} 
+                alt={item.name} 
+                width={300}
+                height={300}
+                className="rounded-lg w-full max-w-xs object-contain" 
+              />
             ) : (
               <div className="w-full max-w-xs h-48 bg-gray-100 flex items-center justify-center rounded-lg">
                 <span className="text-6xl">🛢️</span>
@@ -186,8 +185,14 @@ export default function ItemDetailPage({ params }: { params: Promise<{ itemId: s
                                   setOfferPrice('');
                                   setOfferMessage(null);
                                 }, 1200);
-                              } catch (e: any) {
-                                setOfferMessage(e?.response?.data?.message || "Failed to create offer");
+                              } catch (e: unknown) {
+                                const errorMessage = e instanceof Error && 'response' in e && 
+                                  typeof e.response === 'object' && e.response !== null &&
+                                  'data' in e.response && typeof e.response.data === 'object' && 
+                                  e.response.data !== null && 'message' in e.response.data
+                                  ? String(e.response.data.message)
+                                  : "Failed to create offer";
+                                setOfferMessage(errorMessage);
                               } finally {
                                 setOfferLoading(false);
                               }
@@ -233,7 +238,13 @@ export default function ItemDetailPage({ params }: { params: Promise<{ itemId: s
         <div className="w-full lg:w-80 flex-shrink-0 bg-white rounded-xl shadow p-6 flex flex-col items-center">
           <div className="w-20 h-20 bg-[#E6F9F3] rounded-full flex items-center justify-center mb-4 overflow-hidden">
             {seller?.avatar_url ? (
-              <img src={seller.avatar_url} alt={seller.name} className="w-full h-full object-cover rounded-full" />
+              <Image 
+                src={seller.avatar_url} 
+                alt={seller.name} 
+                width={80}
+                height={80}
+                className="w-full h-full object-cover rounded-full" 
+              />
             ) : (
               <span className="text-4xl">👤</span>
             )}

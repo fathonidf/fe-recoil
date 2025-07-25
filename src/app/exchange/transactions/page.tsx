@@ -12,8 +12,27 @@ const statusMap: Record<string, { label: string; color: string; icon: string }> 
   delivered: { label: "Product Delivered", color: "bg-green-500 text-white", icon: "" },
 };
 
+interface Transaction {
+  id: number;
+  agent_id?: number;
+  member_id?: number;
+  transaction_type: string;
+  status: string;
+  created_at: string;
+  agent_name?: string;
+  item_name?: string;
+  quantity?: number;
+  total_price?: number;
+  items?: Array<{
+    id: number;
+    name: string;
+    quantity: number;
+    price: number;
+  }>;
+}
+
 export default function TransactionsPage() {
-  const [transactions, setTransactions] = useState<any[]>([]);
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("Transactions");
   const [selectedCategory, setSelectedCategory] = useState("All Categories");
@@ -196,7 +215,9 @@ export default function TransactionsPage() {
                       <div className="text-gray-700 mb-1">Quantity: <span className="font-bold">{tx.quantity}</span></div>
                     </div>
                     <div className="flex flex-col items-end gap-2 min-w-[160px]">
-                      <div className="text-[#04BB84] font-bold text-xl">Rp {tx.total_price.toLocaleString()}</div>
+                      <div className="text-[#04BB84] font-bold text-xl">
+                        Rp {typeof tx.total_price === 'number' ? tx.total_price.toLocaleString() : '-'}
+                      </div>
                       {tx.status === 'completed' && (
                         <span className="bg-green-500 text-white px-3 py-1 rounded text-xs font-semibold">Product Delivered</span>
                       )}

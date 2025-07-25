@@ -101,12 +101,13 @@ export default function CreateBlogPage() {
       // Redirect back to blog page
       router.push('/community/blog')
       
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error creating blog:', error)
       
       // Handle validation errors from backend
-      if (error.response?.data?.errors) {
-        setErrors(error.response.data.errors)
+      const axiosError = error as { response?: { data?: { errors?: Record<string, string> } } }
+      if (axiosError.response?.data?.errors) {
+        setErrors(axiosError.response.data.errors)
       } else {
         setErrors({ general: 'Failed to create blog post. Please try again.' })
       }

@@ -56,7 +56,7 @@ export const blogService = {
   },
 
   // Create a new blog post
-  createBlog: async (formData: FormData): Promise<any> => {
+  createBlog: async (formData: FormData): Promise<{ success: boolean; blog?: Blog }> => {
     const response = await apiClient.post('/community/blogs/create/', formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
@@ -66,7 +66,7 @@ export const blogService = {
   },
 
   // Edit a blog post
-  editBlog: async (blogId: number, formData: FormData): Promise<any> => {
+  editBlog: async (blogId: number, formData: FormData): Promise<{ success: boolean; blog?: Blog }> => {
     const response = await apiClient.post(`/community/blogs/${blogId}/edit/`, formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
@@ -76,13 +76,13 @@ export const blogService = {
   },
 
   // Delete a blog post
-  deleteBlog: async (blogId: number): Promise<any> => {
+  deleteBlog: async (blogId: number): Promise<{ success: boolean; message?: string }> => {
     const response = await apiClient.delete(`/community/blogs/${blogId}/delete/`)
     return response.data
   },
 
   // Like/thumbs up a blog post
-  thumbsUpBlog: async (blogId: number): Promise<any> => {
+  thumbsUpBlog: async (blogId: number): Promise<{ success: boolean; thumbs_up_count?: number }> => {
     const response = await apiClient.post(`/community/blogs/${blogId}/thumbs-up/`)
     return response.data
   }
