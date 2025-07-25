@@ -215,7 +215,9 @@ export default function TransactionsPage() {
                       <div className="text-gray-700 mb-1">Quantity: <span className="font-bold">{tx.quantity}</span></div>
                     </div>
                     <div className="flex flex-col items-end gap-2 min-w-[160px]">
-                      <div className="text-[#04BB84] font-bold text-xl">Rp {tx.total_price.toLocaleString()}</div>
+                      <div className="text-[#04BB84] font-bold text-xl">
+                        Rp {typeof tx.total_price === 'number' ? tx.total_price.toLocaleString() : '-'}
+                      </div>
                       {tx.status === 'completed' && (
                         <span className="bg-green-500 text-white px-3 py-1 rounded text-xs font-semibold">Product Delivered</span>
                       )}
