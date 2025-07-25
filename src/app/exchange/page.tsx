@@ -1,12 +1,12 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { useRouter } from 'next/navigation'
 import { fetchAllItems, Item } from '@/services/item.service'
 import { addToCart } from '@/services/cart.service'
 import { fetchMyItems } from '@/services/myitem.service'
 import Image from "next/image"
-import { Search, ShoppingCart, ChevronDown } from "lucide-react"
+import { Search, ShoppingCart, ChevronDown, Upload, X } from "lucide-react"
 import { useAuthContext } from "@/contexts/AuthContext"
 import axios from "@/lib/axios"
 
@@ -28,6 +28,19 @@ export default function ExchangePage() {
   const [offerLoading, setOfferLoading] = useState(false);
   const [offerMessage, setOfferMessage] = useState<string | null>(null);
   const [offerItem, setOfferItem] = useState<Item | null>(null);
+  const [addProductModalOpen, setAddProductModalOpen] = useState(false);
+  const [addProductLoading, setAddProductLoading] = useState(false);
+  const [addProductMessage, setAddProductMessage] = useState<string | null>(null);
+  const [productForm, setProductForm] = useState({
+    product_title: '',
+    description: '',
+    price: '',
+    quantity: '',
+    waste_category: '',
+    image: null as File | null,
+  });
+  const [productImagePreview, setProductImagePreview] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (!isAuthenticated) return;
@@ -55,6 +68,70 @@ export default function ExchangePage() {
     "Others"
   ]
 
+  // Handle product form input
+  const handleProductInput = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    setProductForm(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleProductImage = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0] || null;
+    setProductForm(prev => ({ ...prev, image: file }));
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (ev) => setProductImagePreview(ev.target?.result as string);
+      reader.readAsDataURL(file);
+    } else {
+      setProductImagePreview(null);
+    }
+  };
+
+  const removeProductImage = () => {
+    setProductForm(prev => ({ ...prev, image: null }));
+    setProductImagePreview(null);
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
+  const handleAddProduct = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setAddProductLoading(true);
+    setAddProductMessage(null);
+    try {
+      const formData = new FormData();
+      formData.append('product_title', productForm.product_title);
+      formData.append('description', productForm.description);
+      formData.append('price', productForm.price);
+      formData.append('quantity', productForm.quantity);
+      formData.append('waste_category', productForm.waste_category);
+      formData.append('unit', 'Liter');
+      if (productForm.image) formData.append('image', productForm.image);
+
+      // Important: do NOT set Content-Type header, let browser set it for FormData
+      await axios.post("/item/add/", formData, {
+        headers: { "Content-Type": "multipart/form-data" }
+      });
+      setAddProductMessage('Product added successfully!');
+      setTimeout(() => {
+        setAddProductModalOpen(false);
+        setProductForm({
+          product_title: '',
+          description: '',
+          price: '',
+          quantity: '',
+          waste_category: '',
+          image: null,
+        });
+        setProductImagePreview(null);
+        setAddProductMessage(null);
+        setActiveTab('My Store');
+      }, 1200);
+    } catch (err: any) {
+      setAddProductMessage(err?.response?.data?.message || 'Failed to add product');
+    } finally {
+      setAddProductLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen pt-10 relative overflow-hidden">
         {/* Background blur blobs */}
@@ -77,7 +154,7 @@ export default function ExchangePage() {
               </div>
       <div className="container mx-auto px-4 py-8 relative z-10">
         {/* Only show main content if modal is not open */}
-        {!offerModalOpen && (
+        {!offerModalOpen && !addProductModalOpen && (
           <>
             {/* Header Section */}
             <div className="text-center mb-8 relative z-20">
@@ -141,36 +218,44 @@ export default function ExchangePage() {
                       <ShoppingCart className="w-4 h-4" />
                       <span>My Cart</span>
                     </button>
-
-                    {/* Categories Dropdown */}
-                    <div className="relative">
+                    {/* Right Button: Add Product for My Store, Categories Dropdown otherwise */}
+                    {activeTab === "My Store" ? (
                       <button
-                        onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                        className="cursor-pointer text-[#04BB84] flex items-center gap-2 px-4 py-2 bg-white border border-[#04BB84] rounded-lg hover:bg-gray-50 transition-all duration-300 min-w-[160px] justify-between whitespace-nowrap"
+                        className="cursor-pointer flex items-center gap-2 px-4 py-2 bg-[#04BB84] text-white rounded-lg hover:bg-[#039970] transition-all duration-300 whitespace-nowrap"
+                        onClick={() => setAddProductModalOpen(true)}
                       >
-                        <span>{selectedCategory}</span>
-                        <ChevronDown className={`w-4 h-4 transition-transform duration-300 z-50 ${isDropdownOpen ? 'rotate-180' : ''}`} />
+                        + Add Product
                       </button>
+                    ) : (
+                      <div className="relative">
+                        <button
+                          onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                          className="cursor-pointer text-[#04BB84] flex items-center gap-2 px-4 py-2 bg-white border border-[#04BB84] rounded-lg hover:bg-gray-50 transition-all duration-300 min-w-[160px] justify-between whitespace-nowrap"
+                        >
+                          <span>{selectedCategory}</span>
+                          <ChevronDown className={`w-4 h-4 transition-transform duration-300 z-50 ${isDropdownOpen ? 'rotate-180' : ''}`} />
+                        </button>
 
-                      {isDropdownOpen && (
-                        <div className="absolute top-full mt-2 left-0 right-0 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
-                          {categories.map((category) => (
-                            <button
-                              key={category}
-                              onClick={() => {
-                                setSelectedCategory(category)
-                                setIsDropdownOpen(false)
-                              }}
-                              className={`w-full text-left px-4 py-2 hover:bg-gray-300 transition-colors first:rounded-t-lg last:rounded-b-lg z-50 cursor-pointer ${
-                                selectedCategory === category ? 'bg-[#04BB84] text-white hover:bg-[#04BB84]' : 'text-gray-700'
-                              }`}
-                            >
-                              {category}
-                            </button>
-                          ))}
-                        </div>
-                      )}
-                    </div>
+                        {isDropdownOpen && (
+                          <div className="absolute top-full mt-2 left-0 right-0 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
+                            {categories.map((category) => (
+                              <button
+                                key={category}
+                                onClick={() => {
+                                  setSelectedCategory(category)
+                                  setIsDropdownOpen(false)
+                                }}
+                                className={`w-full text-left px-4 py-2 hover:bg-gray-300 transition-colors first:rounded-t-lg last:rounded-b-lg z-50 cursor-pointer ${
+                                  selectedCategory === category ? 'bg-[#04BB84] text-white hover:bg-[#04BB84]' : 'text-gray-700'
+                                }`}
+                              >
+                                {category}
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
@@ -224,7 +309,8 @@ export default function ExchangePage() {
                               )}
                             </div>
                             <div className="p-4">
-                              <h3 className="font-semibold text-gray-800 mb-2">{item.name} - {item.unit}</h3>
+                              {/* Only show the title, no " - Liter" */}
+                              <h3 className="font-semibold text-gray-800 mb-2">{item.name}</h3>
                               <p className="text-gray-600 text-sm mb-1 capitalize">{item.category}</p>
                               {activeTab !== 'My Store' && (
                                 typeof item.distance_km === 'number' ? (
@@ -346,7 +432,146 @@ export default function ExchangePage() {
             </div>
           </div>
         )}
+        {/* Add Product Modal */}
+        {addProductModalOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center">
+            <div className="bg-white rounded-xl shadow-lg p-8 w-full max-w-lg relative border border-gray-200">
+              <button
+                className="absolute top-2 right-2 text-gray-400 hover:text-gray-600"
+                onClick={() => { setAddProductModalOpen(false); setAddProductMessage(null); }}
+              >✕</button>
+              <h2 className="text-2xl font-bold mb-4 text-center">Add Product</h2>
+              <form onSubmit={handleAddProduct} className="space-y-4">
+                {/* Image Upload Section */}
+                <div>
+                  <label className="block text-sm font-medium mb-1">Product Image (Optional)</label>
+                  {productImagePreview ? (
+                    <div className="relative w-full h-48 rounded-lg overflow-hidden border-2 border-gray-300">
+                      <img
+                        src={productImagePreview}
+                        alt="Preview"
+                        className="object-contain w-full h-full"
+                      />
+                      <button
+                        type="button"
+                        onClick={removeProductImage}
+                        className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                  ) : (
+                    <div
+                      onClick={() => fileInputRef.current?.click()}
+                      className="w-full h-32 border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center cursor-pointer hover:border-[#04BB84] hover:bg-[#E6F9F3] transition-colors"
+                    >
+                      <Upload className="w-8 h-8 text-gray-400 mb-2" />
+                      <p className="text-sm text-gray-600">Click to upload an image</p>
+                      <p className="text-xs text-gray-500">PNG, JPG, GIF up to 10MB</p>
+                    </div>
+                  )}
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={handleProductImage}
+                    className="hidden"
+                  />
+                </div>
+                <div className="flex gap-4">
+                  <div className="flex-1">
+                    <label className="block text-sm font-medium mb-1">Product Title</label>
+                    <input
+                      type="text"
+                      name="product_title"
+                      value={productForm.product_title}
+                      onChange={handleProductInput}
+                      className="w-full border rounded px-3 py-2"
+                      required
+                    />
+                  </div>
+                  <div className="flex-1">
+                    <label className="block text-sm font-medium mb-1">Waste Category</label>
+                    <input
+                      type="text"
+                      name="waste_category"
+                      value={productForm.waste_category}
+                      onChange={handleProductInput}
+                      className="w-full border rounded px-3 py-2"
+                      required
+                    />
+                  </div>
+                </div>
+                <div className="flex gap-4">
+                  <div className="flex-1">
+                    <label className="block text-sm font-medium mb-1">Quantity</label>
+                    <input
+                      type="number"
+                      name="quantity"
+                      value={productForm.quantity}
+                      onChange={handleProductInput}
+                      className="w-full border rounded px-3 py-2"
+                      required
+                      min={1}
+                    />
+                  </div>
+                  <div className="flex-1">
+                    <label className="block text-sm font-medium mb-1">Unit</label>
+                    <input
+                      type="text"
+                      value="Liter"
+                      disabled
+                      className="w-full border rounded px-3 py-2 bg-gray-100"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">Description</label>
+                  <textarea
+                    name="description"
+                    value={productForm.description}
+                    onChange={handleProductInput}
+                    className="w-full border rounded px-3 py-2"
+                    rows={3}
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">Price</label>
+                  <input
+                    type="number"
+                    name="price"
+                    value={productForm.price}
+                    onChange={handleProductInput}
+                    className="w-full border rounded px-3 py-2"
+                    required
+                    min={1}
+                  />
+                </div>
+                {addProductMessage && (
+                  <div className="text-center text-green-600 text-sm">{addProductMessage}</div>
+                )}
+                <div className="flex gap-2 mt-4">
+                  <button
+                    type="button"
+                    className="flex-1 bg-gray-200 text-gray-700 px-3 py-2 rounded"
+                    onClick={() => { setAddProductModalOpen(false); setAddProductMessage(null); }}
+                    disabled={addProductLoading}
+                  >Cancel</button>
+                  <button
+                    type="submit"
+                    className="flex-1 bg-[#04BB84] text-white px-3 py-2 rounded hover:bg-[#039970] disabled:opacity-60"
+                    disabled={addProductLoading}
+                  >
+                    {addProductLoading ? "Adding..." : "Add Product"}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   )
 }
+
