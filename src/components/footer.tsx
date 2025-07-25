@@ -62,7 +62,18 @@ export function Footer() {
             <p className="text-sm mb-4">
               Feel free to reach out if you have any questions or would like to collaborate.
             </p>
-            <Button className="bg-gradient-to-r to-[#04BB84] from-[#FFE51C] text-[#FFFECF] hover:bg-gradient-to-r hover:to-[#FFE51C] hover:from-[#FFFECF] text-[#FFFECF] hover:text-[#123524] text-xl px-4 py-2 rounded-lg">Contact Now</Button>
+            <Button
+              asChild
+              className="bg-gradient-to-r to-[#04BB84] from-[#FFE51C] text-[#FFFECF] hover:bg-gradient-to-r hover:to-[#FFE51C] hover:from-[#FFFECF] text-[#FFFECF] hover:text-[#123524] text-xl px-4 py-2 rounded-lg"
+            >
+              <Link
+              href="https://www.linkedin.com/in/tsabit-coda-rafisukmawan/"
+              target="_blank"
+              rel="noopener noreferrer"
+              >
+              Contact Now
+              </Link>
+            </Button>
           </div>
         </div>
 
