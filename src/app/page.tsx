@@ -33,9 +33,11 @@ export default function LandingPage() {
             <p className="text-lg text-text-muted max-w-md">
               Easily turn liquid waste into cash. ReCoil connects you with trusted recycling agents for a greener planet.
             </p>
-            <Button className="bg-gradient-to-r from-[#04BB84] to-[#FFE51C] text-[#FFFECF] hover:bg-gradient-to-r hover:from-[#FFE51C] hover:to-[#FFFECF] text-[#FFFECF] hover:text-[#123524] px-8 py-3 rounded-lg text-lg transition-all duration-300">
-              Find out more
-            </Button>
+            <a href="/#about">
+              <Button className="bg-gradient-to-r from-[#04BB84] to-[#FFE51C] text-[#FFFECF] hover:bg-gradient-to-r hover:from-[#FFE51C] hover:to-[#FFFECF] text-[#FFFECF] hover:text-[#123524] px-8 py-3 rounded-lg text-lg transition-all duration-300">
+                Find out more
+              </Button>
+            </a>
           </div>
         </div>
       </motion.section>
