@@ -46,6 +46,19 @@ export default function QnADetailPage() {
   const [closingQuestion, setClosingQuestion] = useState(false)
   const { isAuthenticated } = useAuthContext()
 
+  // Helper functions for status
+  const getStatusColor = (status: string) => {
+    return status === "closed" ? 'bg-red-500' : 'bg-green-500'
+  }
+
+  const getStatusText = (status: string) => {
+    return status === "closed" ? 'Closed' : 'Open'
+  }
+
+  const isQuestionClosed = (status: string) => {
+    return status === "closed"
+  }
+
   // Fetch comments function
   const fetchComments = useCallback(async () => {
     setLoadingComments(true)
@@ -107,16 +120,6 @@ export default function QnADetailPage() {
     })
   }
 
-  // Get status color
-  const getStatusColor = (isClosed: boolean) => {
-    return isClosed ? 'bg-red-500' : 'bg-yellow-500'
-  }
-
-  // Get status text
-  const getStatusText = (isClosed: boolean) => {
-    return isClosed ? 'Closed' : 'Open'
-  }
-
   // Handle answer submission
   const handleSubmitAnswer = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -130,7 +133,7 @@ export default function QnADetailPage() {
       return
     }
 
-    if (question?.is_closed) {
+    if (question && isQuestionClosed(question.status)) {
       alert('This question is closed and cannot accept new answers')
       return
     }
@@ -205,7 +208,7 @@ export default function QnADetailPage() {
     try {
       await qnaService.closeQuestion(questionId)
       // Update local state to reflect closed status
-      setQuestion(prev => prev ? { ...prev, is_closed: true } : null)
+      setQuestion(prev => prev ? { ...prev, status: "closed" } : null)
     } catch (error) {
       console.error('Error closing question:', error)
       alert('Failed to close question. Please try again.')
@@ -289,9 +292,9 @@ export default function QnADetailPage() {
         <div className="max-w-4xl mx-auto relative z-20">
           {/* Question Card */}
           <div className={`bg-white/90 backdrop-blur-sm rounded-xl shadow-lg p-6 border border-white/20 mb-8 ${
-            question.is_closed ? 'opacity-70' : ''
+            isQuestionClosed(question.status) ? 'opacity-70' : ''
           }`}>
-            {question.is_closed && (
+            {isQuestionClosed(question.status) && (
               <div className="absolute inset-0 bg-gray-900/20 rounded-xl pointer-events-none"></div>
             )}
             
@@ -325,7 +328,7 @@ export default function QnADetailPage() {
               {/* Status Badge and Close Button */}
               <div className="flex items-center gap-3">
                 {/* Close Button - Only show if question is not closed and user is authenticated */}
-                {!question.is_closed && isAuthenticated && (
+                {!isQuestionClosed(question.status) && isAuthenticated && (
                   <button
                     onClick={handleCloseQuestion}
                     disabled={closingQuestion}
@@ -336,8 +339,8 @@ export default function QnADetailPage() {
                 )}
                 
                 {/* Status Badge */}
-                <div className={`px-3 py-1 rounded-full text-xs font-medium text-white ${getStatusColor(question.is_closed)}`}>
-                  {getStatusText(question.is_closed)}
+                <div className={`px-3 py-1 rounded-full text-xs font-medium text-white ${getStatusColor(question.status)}`}>
+                  {getStatusText(question.status)}
                 </div>
               </div>
             </div>
@@ -364,7 +367,7 @@ export default function QnADetailPage() {
           </div>
 
           {/* Answer Form - Only show if question is not closed */}
-          {!question.is_closed && (
+          {!isQuestionClosed(question.status) && (
             <div className="bg-white/90 backdrop-blur-sm rounded-xl shadow-lg p-6 border border-white/20 mb-8">
               <h3 className="text-xl font-bold text-gray-800 mb-4">Your Answer</h3>
               
