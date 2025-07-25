@@ -122,12 +122,7 @@ export default function LandingPage() {
               {/* Text container with background */}
               <div className="relative bg-white rounded-3xl p-8 pt-12 shadow-lg border border-gray-100 z-20">
                 <p className="text-black leading-loose text-justify">
-                  ReCoil is the all-in-one digital platform that transforms used cooking oil and liquid waste into real
-                  value—for you and the planet. By directly linking waste producers with certified recycling agents, we
-                  eliminate middlemen, ensure fair pricing, and streamline pick-up logistics. Guided by our friendly
-                  AI-bot Oli, users enjoy transparent transactions, instant impact tracking, and bite-sized eco-lessons
-                  that make sustainability engaging and rewarding. At ReCoil, we turn tomorrow&apos;s waste into today&apos;s
-                  opportunity.
+                  At ReCoil, our purpose is to make the circular economy a simple and profitable reality for everyone. We provide a trusted digital marketplace that directly connects used oil producers with recycling agents, eliminating middlemen to ensure fair pricing. Through our platform, users can not only sell their used cooking oil but also purchase recycled products. Guided by our smart Eco AI for personalized insights and supported by a vibrant Community for shared learning, ReCoil transforms hazardous waste into a valuable opportunity.
                 </p>
               </div>
             </div>

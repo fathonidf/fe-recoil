@@ -44,7 +44,7 @@ export default function QnADetailPage() {
   const [submittingAnswer, setSubmittingAnswer] = useState(false)
   const [likingAnswers, setLikingAnswers] = useState<Set<number>>(new Set())
   const [closingQuestion, setClosingQuestion] = useState(false)
-  const { isAuthenticated } = useAuthContext()
+  const { isAuthenticated, user } = useAuthContext()
 
   // Helper functions for status
   const getStatusColor = (status: string) => {
@@ -327,8 +327,8 @@ export default function QnADetailPage() {
               
               {/* Status Badge and Close Button */}
               <div className="flex items-center gap-3">
-                {/* Close Button - Only show if question is not closed and user is authenticated */}
-                {!isQuestionClosed(question.status) && isAuthenticated && (
+                {/* Close Button - Only show if question is not closed, user is authenticated, and user is the question author */}
+                {!isQuestionClosed(question.status) && isAuthenticated && user?.username === question.username && (
                   <button
                     onClick={handleCloseQuestion}
                     disabled={closingQuestion}
