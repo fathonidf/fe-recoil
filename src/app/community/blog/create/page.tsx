@@ -247,7 +247,7 @@ export default function CreateBlogPage() {
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="flex-1 px-6 py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-lg hover:from-purple-700 hover:to-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="cursor-pointer bg-gradient-to-r from-[#04BB84] to-[#FFE51C] text-[#FFFECF] hover:bg-gradient-to-r hover:from-[#FFE51C] hover:to-[#FFFECF] text-[#FFFECF] hover:text-[#123524] px-8 py-3 rounded-lg text-lg transition-all duration-300"
               >
                 {isSubmitting ? 'Publishing...' : 'Publish Blog'}
               </button>

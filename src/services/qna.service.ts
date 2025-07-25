@@ -8,7 +8,7 @@ export interface Question {
   body: string
   category: string
   thumbs_up_count: number
-  is_closed: boolean
+  status: string  // "closed" or "open"
   replies_count?: number
 }
 

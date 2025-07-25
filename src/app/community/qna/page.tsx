@@ -46,7 +46,6 @@ export default function QnAPage() {
       } else {
         response = await qnaService.getAllQuestions()
       }
-      console.log('Fetched questions:', response.questions)
       setQuestions(response.questions)
     } catch (err: unknown) {
       const error = err as Error
@@ -159,7 +158,7 @@ export default function QnAPage() {
       // Update local state instead of just refreshing
       setQuestions(prev => prev.map(question => 
         question.id === questionId 
-          ? { ...question, is_closed: true }
+          ? { ...question, status: "closed" }
           : question
       ))
     } catch (error) {
@@ -175,13 +174,18 @@ export default function QnAPage() {
   }
 
   // Get status color
-  const getStatusColor = (isClosed: boolean) => {
-    return isClosed ? 'bg-red-500' : 'bg-green-500'
+  const getStatusColor = (status: string) => {
+    return status === "closed" ? 'bg-red-500' : 'bg-green-500'
   }
 
   // Get status text
-  const getStatusText = (isClosed: boolean) => {
-    return isClosed ? 'Closed' : 'Open'
+  const getStatusText = (status: string) => {
+    return status === "closed" ? 'Closed' : 'Open'
+  }
+
+  // Check if question is closed
+  const isQuestionClosed = (status: string) => {
+    return status === "closed"
   }
 
   return (
@@ -375,10 +379,10 @@ export default function QnAPage() {
                   key={question.id} 
                   onClick={() => handleQuestionClick(question.id)}
                   className={`bg-white/80 backdrop-blur-sm rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-all duration-300 border border-white/20 cursor-pointer transform hover:scale-[1.02] hover:-translate-y-1 group relative ${
-                    question.is_closed ? 'opacity-60' : ''
+                    isQuestionClosed(question.status) ? 'opacity-60' : ''
                   }`}
                 >
-                  {question.is_closed && (
+                  {isQuestionClosed(question.status) && (
                     <div className="absolute inset-0 bg-gray-900/10 pointer-events-none rounded-lg"></div>
                   )}
                   <div className="p-6">
@@ -406,8 +410,8 @@ export default function QnAPage() {
                       </div>
                       
                       {/* Status Badge */}
-                      <div className={`px-3 py-1 rounded-full text-xs font-medium text-white ${getStatusColor(question.is_closed)}`}>
-                        {getStatusText(question.is_closed)}
+                      <div className={`px-3 py-1 rounded-full text-xs font-medium text-white ${getStatusColor(question.status)}`}>
+                        {getStatusText(question.status)}
                       </div>
                     </div>
 
@@ -450,7 +454,7 @@ export default function QnAPage() {
                       </div>
 
                       {/* Close button for own questions */}
-                      {activeTab === "My Questions" && !question.is_closed && (
+                      {activeTab === "My Questions" && !isQuestionClosed(question.status) && (
                         <button
                           onClick={(e) => handleCloseQuestion(question.id, e)}
                           disabled={closingQuestions.has(question.id)}
