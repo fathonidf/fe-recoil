@@ -331,7 +331,7 @@ export default function ExchangePage() {
                                 )
                               )}
                               <div className="flex items-center mb-3">
-                                <span className="text-[#04BB84] font-bold text-lg">${item.price.toFixed(2)}</span>
+                                <span className="text-[#04BB84] font-bold text-lg">Rp{item.price.toFixed(2)}</span>
                               </div>
                               <div className="flex gap-2">
                                 <button
