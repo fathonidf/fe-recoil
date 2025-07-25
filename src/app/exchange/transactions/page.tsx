@@ -58,8 +58,7 @@ export default function TransactionsPage() {
   const tabs = [
     "Browse Product",
     "My Store",
-    "Transactions",
-    "Messages"
+    "Transactions"
   ];
   const categories = [
     "All Categories",
@@ -102,7 +101,7 @@ export default function TransactionsPage() {
         {/* Tab Navigation */}
         <div className="mb-8 relative z-20">
           <div className="bg-white rounded-xl p-2 shadow-sm max-w-6xl mx-auto">
-            <div className="grid grid-cols-4 gap-1">
+            <div className="grid grid-cols-3 gap-1">
               {tabs.map((tab) => (
                 <button
                   key={tab}
@@ -110,7 +109,6 @@ export default function TransactionsPage() {
                     if (tab === "Browse Product") router.push("/exchange");
                     else if (tab === "My Store") router.push("/exchange?tab=My%20Store");
                     else if (tab === "Transactions") router.push("/exchange/transactions");
-                    else if (tab === "Messages") router.push("/exchange/messages");
                     setActiveTab(tab);
                   }}
                   className={`px-4 py-3 rounded-lg font-medium transition-all duration-300 text-center cursor-pointer ${
