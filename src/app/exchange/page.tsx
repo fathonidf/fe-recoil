@@ -56,8 +56,7 @@ export default function ExchangePage() {
   const tabs = [
     "Browse Product",
     "My Store", 
-    "Transactions",
-    "Messages"
+    "Transactions"
   ]
 
   const categories = [
@@ -175,7 +174,7 @@ export default function ExchangePage() {
             {/* Tab Navigation */}
             <div className="mb-8 relative z-20">
               <div className="bg-white rounded-xl p-2 shadow-sm max-w-6xl mx-auto">
-                <div className="grid grid-cols-4 gap-1">
+                <div className="grid grid-cols-3 gap-1">
                   {tabs.map((tab) => (
                     <button
                       key={tab}
@@ -296,7 +295,7 @@ export default function ExchangePage() {
                   ) : errorItems ? (
                     <div className="text-center py-10 text-red-500">{errorItems}</div>
                   ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                       {items.length === 0 ? (
                         <div className="col-span-full text-center text-gray-500">No products found.</div>
                       ) : (
