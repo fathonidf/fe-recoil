@@ -371,7 +371,19 @@ export default function ExchangePage() {
                                 >
                                   View Details
                                 </button>
-                                {user?.is_agent  ? (
+                                {activeTab === 'My Store' ? (
+                                  <button
+                                    className="flex-1 bg-red-500 text-white px-3 py-1 rounded text-sm hover:bg-red-600 transition-colors disabled:opacity-60"
+                                    disabled={addingId === item.id}
+                                    onClick={async (e) => {
+                                      e.stopPropagation();
+                                      // TODO: Implement delete functionality
+                                      console.log('Delete item:', item.id);
+                                    }}
+                                  >
+                                    Delete
+                                  </button>
+                                ) : user?.is_agent ? (
                                   <>
                                     <button
                                       className="flex-1 bg-[#04BB84] text-white px-3 py-1 rounded text-sm hover:bg-[#039970] transition-colors"
