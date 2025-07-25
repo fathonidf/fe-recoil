@@ -1,9 +1,14 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
+import { useRouter } from 'next/navigation'
+import { fetchAllItems, Item } from '@/services/item.service'
+import { addToCart } from '@/services/cart.service'
+import { fetchMyItems } from '@/services/myitem.service'
 import Image from "next/image"
 import { Search, ShoppingCart, ChevronDown } from "lucide-react"
 import { useAuthContext } from "@/contexts/AuthContext"
+import axios from "@/lib/axios"
 
 export default function ExchangePage() {
   const [activeTab, setActiveTab] = useState("Browse Product")
@@ -11,6 +16,29 @@ export default function ExchangePage() {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
   const { isAuthenticated, user } = useAuthContext()
+
+  const router = useRouter();
+  // Items state
+  const [items, setItems] = useState<Item[]>([])
+  const [loadingItems, setLoadingItems] = useState(false)
+  const [errorItems, setErrorItems] = useState<string | null>(null)
+  const [addingId, setAddingId] = useState<number | null>(null);
+  const [offerModalOpen, setOfferModalOpen] = useState(false);
+  const [offerPrice, setOfferPrice] = useState<number | ''>('');
+  const [offerLoading, setOfferLoading] = useState(false);
+  const [offerMessage, setOfferMessage] = useState<string | null>(null);
+  const [offerItem, setOfferItem] = useState<Item | null>(null);
+
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    setLoadingItems(true);
+    setErrorItems(null);
+    const fetchFn = activeTab === 'My Store' ? fetchMyItems : fetchAllItems;
+    fetchFn()
+      .then(setItems)
+      .catch(() => setErrorItems('Failed to load items'))
+      .finally(() => setLoadingItems(false));
+  }, [isAuthenticated, activeTab])
 
   const tabs = [
     "Browse Product",
@@ -48,24 +76,33 @@ export default function ExchangePage() {
                 />
               </div>
       <div className="container mx-auto px-4 py-8 relative z-10">
-        {/* Header Section */}
-        <div className="text-center mb-8 relative z-20">
-          <h1 className="text-4xl md:text-5xl font-bold text-[#04BB84] mb-4">
-            Small Actions, Big Impact!
-          </h1>
-          <p className="text-lg italic text-gray-600 max-w-2xl mx-auto">
-            Connect, exchange, and recycle quality liquid waste effortlessly!
-          </p>
-        </div>
+        {/* Only show main content if modal is not open */}
+        {!offerModalOpen && (
+          <>
+            {/* Header Section */}
+            <div className="text-center mb-8 relative z-20">
+              <h1 className="text-4xl md:text-5xl font-bold text-[#04BB84] mb-4">
+                Small Actions, Big Impact!
+              </h1>
+              <p className="text-lg italic text-gray-600 max-w-2xl mx-auto">
+                Connect, exchange, and recycle quality liquid waste effortlessly!
+              </p>
+            </div>
 
-        {/* Tab Navigation */}
+            {/* Tab Navigation */}
             <div className="mb-8 relative z-20">
               <div className="bg-white rounded-xl p-2 shadow-sm max-w-6xl mx-auto">
                 <div className="grid grid-cols-4 gap-1">
                   {tabs.map((tab) => (
                     <button
                       key={tab}
-                      onClick={() => setActiveTab(tab)}
+                      onClick={() => {
+                        if (tab === "Transactions") {
+                          router.push("/exchange/transactions");
+                        } else {
+                          setActiveTab(tab);
+                        }
+                      }}
                       className={`px-4 py-3 rounded-lg font-medium transition-all duration-300 text-center cursor-pointer ${
                         activeTab === tab
                           ? "bg-[#04BB84] text-white shadow-[0_4px_8px_rgba(4,187,132,0.3)] transform translate-y-[-2px] border-b-4 border-[#039970]"
@@ -97,7 +134,10 @@ export default function ExchangePage() {
 
                   <div className="flex items-center gap-4 flex-shrink-0">
                     {/* My Cart Button */}
-                    <button className="cursor-pointer flex items-center gap-2 px-4 py-2 bg-white border border-[#04BB84] text-[#04BB84] rounded-lg hover:bg-[#04BB84] hover:text-white transition-all duration-300 whitespace-nowrap">
+                    <button
+                      className="cursor-pointer flex items-center gap-2 px-4 py-2 bg-white border border-[#04BB84] text-[#04BB84] rounded-lg hover:bg-[#04BB84] hover:text-white transition-all duration-300 whitespace-nowrap"
+                      onClick={() => router.push('/cart')}
+                    >
                       <ShoppingCart className="w-4 h-4" />
                       <span>My Cart</span>
                     </button>
@@ -136,144 +176,175 @@ export default function ExchangePage() {
               </div>
             </div>
 
-        {/* Conditional Content Based on Authentication */}
-        {!isAuthenticated ? (
-          // Not Logged In - Show Sign In Prompt Only
-          
-          <div className="text-center py-16 relative z-10">
-            <div className="max-w-md mx-auto mb-8">
-              <Image
-                src="/exchange_page/exchange please sign in.svg"
-                alt="Please sign in illustration"
-                width={400}
-                height={300}
-                className="w-full h-auto"
-                priority
+            {/* Conditional Content Based on Authentication */}
+            {!isAuthenticated ? (
+              // Not Logged In - Show Sign In Prompt Only
+              
+              <div className="text-center py-16 relative z-10">
+                <div className="max-w-md mx-auto mb-8">
+                  <Image
+                    src="/exchange_page/exchange please sign in.svg"
+                    alt="Please sign in illustration"
+                    width={400}
+                    height={300}
+                    className="w-full h-auto"
+                    priority
+                  />
+                </div>
+                
+                <h2 className="text-4xl md:text-5xl font-bold text-[#04BB84] mb-4">
+                  Please sign in to view your Store
+                </h2>
+              </div>
+            ) : (
+              <>
+                {/* Product Cards Grid */}
+                <div className="max-w-6xl mx-auto relative z-10">
+                  {loadingItems ? (
+                    <div className="text-center py-10 text-gray-500">Loading products...</div>
+                  ) : errorItems ? (
+                    <div className="text-center py-10 text-red-500">{errorItems}</div>
+                  ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                      {items.length === 0 ? (
+                        <div className="col-span-full text-center text-gray-500">No products found.</div>
+                      ) : (
+                        items.map((item) => (
+                          <div key={item.id} className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300">
+                            <div className="h-48 flex items-center justify-center bg-gradient-to-br from-green-100 to-green-200">
+                              {item.image_url ? (
+                                <img src={item.image_url} alt={item.name} className="object-contain w-full h-full" />
+                              ) : (
+                                <div className="text-center">
+                                  <div className="w-16 h-16 bg-[#04BB84] rounded-full flex items-center justify-center mx-auto mb-2">
+                                    <span className="text-white font-bold text-xl">🛢️</span>
+                                  </div>
+                                  <p className="text-gray-600 text-sm">{item.category}</p>
+                                </div>
+                              )}
+                            </div>
+                            <div className="p-4">
+                              <h3 className="font-semibold text-gray-800 mb-2">{item.name} - {item.unit}</h3>
+                              <p className="text-gray-600 text-sm mb-1 capitalize">{item.category}</p>
+                              {activeTab !== 'My Store' && (
+                                typeof item.distance_km === 'number' ? (
+                                  <p className="text-gray-500 text-xs mb-3">{item.distance_km.toFixed(2)} km away</p>
+                                ) : (
+                                  <p className="text-gray-500 text-xs mb-3">Distance unknown</p>
+                                )
+                              )}
+                              <div className="flex items-center mb-3">
+                                <span className="text-[#04BB84] font-bold text-lg">${item.price.toFixed(2)}</span>
+                              </div>
+                              <div className="flex gap-2">
+                                <button
+                                  className="flex-1 bg-white border border-[#04BB84] text-[#04BB84] px-3 py-1 rounded text-sm hover:bg-gray-50 transition-colors"
+                                  onClick={() => router.push(`/exchange/${item.id}`)}
+                                >
+                                  View Details
+                                </button>
+                                {user?.is_agent  ? (
+                                  <>
+                                    <button
+                                      className="flex-1 bg-[#04BB84] text-white px-3 py-1 rounded text-sm hover:bg-[#039970] transition-colors"
+                                      onClick={() => { setOfferModalOpen(true); setOfferItem(item); }}
+                                    >
+                                      Make an Offer
+                                    </button>
+                                  </>
+                                ) : (
+                                  <button
+                                    className="flex-1 bg-[#04BB84] text-white px-3 py-1 rounded text-sm hover:bg-[#039970] transition-colors disabled:opacity-60"
+                                    disabled={addingId === item.id}
+                                    onClick={async (e) => {
+                                      e.stopPropagation();
+                                      setAddingId(item.id);
+                                      try {
+                                        await addToCart({
+                                          agent_id: item.agent_id || undefined,
+                                          member_id: item.member_id || undefined,
+                                          item_id: item.id,
+                                          quantity: 1,
+                                        });
+                                        // Optionally show a success message
+                                      } finally {
+                                        setAddingId(null);
+                                      }
+                                    }}
+                                  >
+                                    {addingId === item.id ? 'Adding...' : 'Add to Cart'}
+                                  </button>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  )}
+                </div>
+              </>
+            )}
+          </>
+        )}
+        {/* Offer Modal rendered at root so it overlays everything */}
+        {offerModalOpen && offerItem && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
+            <div className="bg-white rounded-xl shadow-lg p-6 w-full max-w-xs relative">
+              <button
+                className="absolute top-2 right-2 text-gray-400 hover:text-gray-600"
+                onClick={() => { setOfferModalOpen(false); setOfferPrice(''); setOfferMessage(null); setOfferItem(null); }}
+              >✕</button>
+              <h2 className="text-lg font-bold mb-4">Make an Offer</h2>
+              <label className="block mb-2 text-sm font-medium">Offer Price (Rp)</label>
+              <input
+                type="number"
+                min={1}
+                value={offerPrice}
+                onChange={e => setOfferPrice(Number(e.target.value))}
+                className="w-full border rounded px-3 py-2 mb-4"
+                placeholder="Enter your offer price"
               />
-            </div>
-            
-            <h2 className="text-4xl md:text-5xl font-bold text-[#04BB84] mb-4">
-              Please sign in to view your Store
-            </h2>
-          </div>
-        ) : (
-          // Logged In - Show Full Exchange Interface
-          <>
-            {/* Product Cards Grid */}
-            <div className="max-w-6xl mx-auto relative z-10">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                {/* Card 1 */}
-                <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300">
-                  <div className="h-48 bg-gradient-to-br from-green-100 to-green-200 flex items-center justify-center">
-                    <div className="text-center">
-                      <div className="w-16 h-16 bg-[#04BB84] rounded-full flex items-center justify-center mx-auto mb-2">
-                        <span className="text-white font-bold text-xl">🛢️</span>
-                      </div>
-                      <p className="text-gray-600 text-sm">Cooking Oil</p>
-                    </div>
-                  </div>
-                  <div className="p-4">
-                    <h3 className="font-semibold text-gray-800 mb-2">Used Cooking Oil - 5L</h3>
-                    <p className="text-gray-600 text-sm mb-3">High quality used cooking oil suitable for recycling</p>
-                    <div className="flex justify-between items-center">
-                      <span className="text-[#04BB84] font-bold">$15.00</span>
-                      <button className="bg-[#04BB84] text-white px-3 py-1 rounded text-sm hover:bg-[#039970] transition-colors">
-                        Add to Cart
-                      </button>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Card 2 */}
-                <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300">
-                  <div className="h-48 bg-gradient-to-br from-blue-100 to-blue-200 flex items-center justify-center">
-                    <div className="text-center">
-                      <div className="w-16 h-16 bg-[#04BB84] rounded-full flex items-center justify-center mx-auto mb-2">
-                        <span className="text-white font-bold text-xl">⚙️</span>
-                      </div>
-                      <p className="text-gray-600 text-sm">Motor Oil</p>
-                    </div>
-                  </div>
-                  <div className="p-4">
-                    <h3 className="font-semibold text-gray-800 mb-2">Used Motor Oil - 2L</h3>
-                    <p className="text-gray-600 text-sm mb-3">Clean used motor oil for industrial recycling</p>
-                    <div className="flex justify-between items-center">
-                      <span className="text-[#04BB84] font-bold">$8.50</span>
-                      <button className="bg-[#04BB84] text-white px-3 py-1 rounded text-sm hover:bg-[#039970] transition-colors">
-                        Add to Cart
-                      </button>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Card 3 */}
-                <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300">
-                  <div className="h-48 bg-gradient-to-br from-purple-100 to-purple-200 flex items-center justify-center">
-                    <div className="text-center">
-                      <div className="w-16 h-16 bg-[#04BB84] rounded-full flex items-center justify-center mx-auto mb-2">
-                        <span className="text-white font-bold text-xl">🎨</span>
-                      </div>
-                      <p className="text-gray-600 text-sm">Paint</p>
-                    </div>
-                  </div>
-                  <div className="p-4">
-                    <h3 className="font-semibold text-gray-800 mb-2">Latex Paint - 1L</h3>
-                    <p className="text-gray-600 text-sm mb-3">Unused latex paint, various colors available</p>
-                    <div className="flex justify-between items-center">
-                      <span className="text-[#04BB84] font-bold">$12.00</span>
-                      <button className="bg-[#04BB84] text-white px-3 py-1 rounded text-sm hover:bg-[#039970] transition-colors">
-                        Add to Cart
-                      </button>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Card 4 */}
-                <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300">
-                  <div className="h-48 bg-gradient-to-br from-yellow-100 to-yellow-200 flex items-center justify-center">
-                    <div className="text-center">
-                      <div className="w-16 h-16 bg-[#04BB84] rounded-full flex items-center justify-center mx-auto mb-2">
-                        <span className="text-white font-bold text-xl">🧪</span>
-                      </div>
-                      <p className="text-gray-600 text-sm">Chemical</p>
-                    </div>
-                  </div>
-                  <div className="p-4">
-                    <h3 className="font-semibold text-gray-800 mb-2">Industrial Solvent - 3L</h3>
-                    <p className="text-gray-600 text-sm mb-3">Clean industrial solvent for reuse</p>
-                    <div className="flex justify-between items-center">
-                      <span className="text-[#04BB84] font-bold">$25.00</span>
-                      <button className="bg-[#04BB84] text-white px-3 py-1 rounded text-sm hover:bg-[#039970] transition-colors">
-                        Add to Cart
-                      </button>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Card 5 */}
-                <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300">
-                  <div className="h-48 bg-gradient-to-br from-red-100 to-red-200 flex items-center justify-center">
-                    <div className="text-center">
-                      <div className="w-16 h-16 bg-[#04BB84] rounded-full flex items-center justify-center mx-auto mb-2">
-                        <span className="text-white font-bold text-xl">🔋</span>
-                      </div>
-                      <p className="text-gray-600 text-sm">Battery Acid</p>
-                    </div>
-                  </div>
-                  <div className="p-4">
-                    <h3 className="font-semibold text-gray-800 mb-2">Battery Acid - 1.5L</h3>
-                    <p className="text-gray-600 text-sm mb-3">Used battery acid for proper recycling</p>
-                    <div className="flex justify-between items-center">
-                      <span className="text-[#04BB84] font-bold">$6.00</span>
-                      <button className="bg-[#04BB84] text-white px-3 py-1 rounded text-sm hover:bg-[#039970] transition-colors">
-                        Add to Cart
-                      </button>
-                    </div>
-                  </div>
-                </div>
+              {offerMessage && (
+                <div className="mb-2 text-center text-green-600 text-sm">{offerMessage}</div>
+              )}
+              <div className="flex gap-2">
+                <button
+                  className="flex-1 bg-gray-200 text-gray-700 px-3 py-1 rounded"
+                  onClick={() => { setOfferModalOpen(false); setOfferPrice(''); setOfferMessage(null); setOfferItem(null); }}
+                  disabled={offerLoading}
+                >Cancel</button>
+                <button
+                  className="flex-1 bg-[#04BB84] text-white px-3 py-1 rounded hover:bg-[#039970] disabled:opacity-60"
+                  disabled={offerLoading || !offerPrice}
+                  onClick={async () => {
+                    if (!offerItem || !offerPrice) return;
+                    setOfferLoading(true);
+                    setOfferMessage(null);
+                    try {
+                      const res = await axios.post('/transaction/offers/create/', {
+                        item_id: offerItem.id,
+                        price: offerPrice,
+                      });
+                      setOfferMessage(res.data?.message || "Offer created successfully");
+                      setTimeout(() => {
+                        setOfferModalOpen(false);
+                        setOfferPrice('');
+                        setOfferMessage(null);
+                        setOfferItem(null);
+                      }, 1200);
+                    } catch (e: any) {
+                      setOfferMessage(e?.response?.data?.message || "Failed to create offer");
+                    } finally {
+                      setOfferLoading(false);
+                    }
+                  }}
+                >
+                  {offerLoading ? "Submitting..." : "OK"}
+                </button>
               </div>
             </div>
-          </>
+          </div>
         )}
       </div>
     </div>
