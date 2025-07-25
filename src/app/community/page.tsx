@@ -49,7 +49,7 @@ export default function CommunityPage() {
               </Link>
 
               {/* QnA Section */}
-              <Link href="community/qna" className="block">
+              <Link href="/community/qna" className="block">
                 <motion.div
                   className="bg-white/90 backdrop-blur-sm rounded-3xl p-6 shadow-lg border border-gray-100 cursor-pointer"
                   initial={{ opacity: 0, x: -50 }}
