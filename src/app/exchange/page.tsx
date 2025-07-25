@@ -43,7 +43,9 @@ export default function ExchangePage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    if (!isAuthenticated) return;
+    // Only require authentication for "My Store" tab
+    if (activeTab === 'My Store' && !isAuthenticated) return;
+    
     setLoadingItems(true);
     setErrorItems(null);
     const fetchFn = activeTab === 'My Store' ? fetchMyItems : fetchAllItems;
@@ -53,6 +55,20 @@ export default function ExchangePage() {
       .finally(() => setLoadingItems(false));
   }, [isAuthenticated, activeTab])
 
+  // Filter items based on search query and selected category
+  const filteredItems = items.filter(item => {
+    const matchesSearch = searchQuery === '' || 
+      item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      item.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (item.description && item.description.toLowerCase().includes(searchQuery.toLowerCase()));
+    
+    const matchesCategory = selectedCategory === 'All Categories' || 
+      item.category.toLowerCase().includes(selectedCategory.toLowerCase()) ||
+      selectedCategory.toLowerCase().includes(item.category.toLowerCase());
+    
+    return matchesSearch && matchesCategory;
+  });
+
   const tabs = [
     "Browse Product",
     "My Store", 
@@ -61,10 +77,10 @@ export default function ExchangePage() {
 
   const categories = [
     "All Categories",
-    "Cooking Oil",
-    "Motor Oil",
-    "Paint",
-    "Others"
+    "cooking oil",
+    "motor oil", 
+    "paint",
+    "others"
   ]
 
   // Handle product form input
@@ -250,11 +266,11 @@ export default function ExchangePage() {
                                   setSelectedCategory(category)
                                   setIsDropdownOpen(false)
                                 }}
-                                className={`w-full text-left px-4 py-2 hover:bg-gray-300 transition-colors first:rounded-t-lg last:rounded-b-lg z-50 cursor-pointer ${
+                                className={`w-full text-left px-4 py-2 hover:bg-gray-300 transition-colors first:rounded-t-lg last:rounded-b-lg z-50 cursor-pointer capitalize ${
                                   selectedCategory === category ? 'bg-[#04BB84] text-white hover:bg-[#04BB84]' : 'text-gray-700'
                                 }`}
                               >
-                                {category}
+                                {category === 'All Categories' ? category : category}
                               </button>
                             ))}
                           </div>
@@ -295,11 +311,26 @@ export default function ExchangePage() {
                   ) : errorItems ? (
                     <div className="text-center py-10 text-red-500">{errorItems}</div>
                   ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                      {items.length === 0 ? (
-                        <div className="col-span-full text-center text-gray-500">No products found.</div>
-                      ) : (
-                        items.map((item) => (
+                    <>
+                      {/* Results counter */}
+                      {(searchQuery || selectedCategory !== 'All Categories') && (
+                        <div className="mb-4 text-sm text-gray-600">
+                          Showing {filteredItems.length} of {items.length} products
+                          {searchQuery && ` for "${searchQuery}"`}
+                          {selectedCategory !== 'All Categories' && ` in ${selectedCategory}`}
+                        </div>
+                      )}
+                      
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {filteredItems.length === 0 ? (
+                          <div className="col-span-full text-center text-gray-500">
+                            {searchQuery || selectedCategory !== 'All Categories' 
+                              ? 'No products match your search criteria.' 
+                              : 'No products found.'
+                            }
+                          </div>
+                        ) : (
+                          filteredItems.map((item) => (
                           <div key={item.id} className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300">
                             <div className="h-48 flex items-center justify-center bg-gradient-to-br from-green-100 to-green-200">
                               {item.image_url ? (
@@ -377,7 +408,8 @@ export default function ExchangePage() {
                           </div>
                         ))
                       )}
-                    </div>
+                      </div>
+                    </>
                   )}
                 </div>
               </>
