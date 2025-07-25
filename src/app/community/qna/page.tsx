@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import Image from "next/image"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
@@ -34,7 +34,7 @@ export default function QnAPage() {
   ]
 
   // Fetch questions based on filter
-  const fetchQuestions = async (filter: string, category: string = "All Questions") => {
+  const fetchQuestions = useCallback(async (filter: string, category: string = "All Questions") => {
     setLoading(true)
     setError("")
     try {
@@ -48,13 +48,14 @@ export default function QnAPage() {
       }
       console.log('Fetched questions:', response.questions)
       setQuestions(response.questions)
-    } catch (err: any) {
-      setError(err.message || "Failed to fetch questions")
+    } catch (err: unknown) {
+      const error = err as Error
+      setError(error.message || "Failed to fetch questions")
       setQuestions([])
     } finally {
       setLoading(false)
     }
-  }
+  }, [isAuthenticated])
 
   // Load questions on component mount and when filter changes
   useEffect(() => {
@@ -63,7 +64,7 @@ export default function QnAPage() {
     } else {
       fetchQuestions("Explore", selectedCategory)
     }
-  }, [activeTab, selectedCategory, isAuthenticated])
+  }, [activeTab, selectedCategory, isAuthenticated, fetchQuestions])
 
   // Handle tab change
   const handleTabChange = (tab: string) => {

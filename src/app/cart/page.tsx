@@ -2,13 +2,27 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import Image from "next/image";
 import axios from "@/lib/axios";
 import { Search, ShoppingCart, ChevronDown } from "lucide-react";
 
+interface CartItem {
+  item_id: number;
+  item_name: string;
+  quantity: number;
+  price: number;
+  // Add other properties as needed
+}
+
+interface AgentInfo {
+  id: number;
+  agent_name: string;
+  agent_email: string;
+  // Add other properties as needed
+}
+
 export default function CartPage() {
-  const [cart, setCart] = useState<any[]>([]);
-  const [agentInfo, setAgentInfo] = useState<any>(null);
+  const [cart, setCart] = useState<CartItem[]>([]);
+  const [agentInfo, setAgentInfo] = useState<AgentInfo | null>(null);
   const [totalItems, setTotalItems] = useState(0);
   const [totalValue, setTotalValue] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -214,7 +228,7 @@ export default function CartPage() {
                 try {
                   await axios.post("/transaction/checkout/");
                   router.push("/exchange");
-                } catch (e) {
+                } catch {
                   alert("Checkout failed");
                 }
               }}

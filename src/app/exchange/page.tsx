@@ -125,8 +125,14 @@ export default function ExchangePage() {
         setAddProductMessage(null);
         setActiveTab('My Store');
       }, 1200);
-    } catch (err: any) {
-      setAddProductMessage(err?.response?.data?.message || 'Failed to add product');
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error && 'response' in err && 
+        typeof err.response === 'object' && err.response !== null &&
+        'data' in err.response && typeof err.response.data === 'object' && 
+        err.response.data !== null && 'message' in err.response.data
+        ? String(err.response.data.message)
+        : 'Failed to add product';
+      setAddProductMessage(errorMessage);
     } finally {
       setAddProductLoading(false);
     }
@@ -298,7 +304,13 @@ export default function ExchangePage() {
                           <div key={item.id} className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300">
                             <div className="h-48 flex items-center justify-center bg-gradient-to-br from-green-100 to-green-200">
                               {item.image_url ? (
-                                <img src={item.image_url} alt={item.name} className="object-contain w-full h-full" />
+                                <Image 
+                                  src={item.image_url} 
+                                  alt={item.name} 
+                                  width={192}
+                                  height={192}
+                                  className="object-contain w-full h-full" 
+                                />
                               ) : (
                                 <div className="text-center">
                                   <div className="w-16 h-16 bg-[#04BB84] rounded-full flex items-center justify-center mx-auto mb-2">
@@ -419,8 +431,14 @@ export default function ExchangePage() {
                         setOfferMessage(null);
                         setOfferItem(null);
                       }, 1200);
-                    } catch (e: any) {
-                      setOfferMessage(e?.response?.data?.message || "Failed to create offer");
+                    } catch (e: unknown) {
+                      const errorMessage = e instanceof Error && 'response' in e && 
+                        typeof e.response === 'object' && e.response !== null &&
+                        'data' in e.response && typeof e.response.data === 'object' && 
+                        e.response.data !== null && 'message' in e.response.data
+                        ? String(e.response.data.message)
+                        : "Failed to create offer";
+                      setOfferMessage(errorMessage);
                     } finally {
                       setOfferLoading(false);
                     }
@@ -447,9 +465,11 @@ export default function ExchangePage() {
                   <label className="block text-sm font-medium mb-1">Product Image (Optional)</label>
                   {productImagePreview ? (
                     <div className="relative w-full h-48 rounded-lg overflow-hidden border-2 border-gray-300">
-                      <img
+                      <Image
                         src={productImagePreview}
                         alt="Preview"
+                        width={400}
+                        height={192}
                         className="object-contain w-full h-full"
                       />
                       <button

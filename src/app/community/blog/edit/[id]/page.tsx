@@ -48,15 +48,16 @@ export default function EditBlogPage() {
         if (blog.image_url && blog.image_url.trim() !== '' && blog.image_url !== 'null') {
           setImagePreview(blog.image_url)
         }
-      } catch (error: any) {
+      } catch (error: unknown) {
         console.error('Error loading blog:', error)
+        const axiosError = error as { message?: string; response?: { data?: unknown; status?: number } }
         console.error('Error details:', {
           blogId,
-          message: error.message,
-          response: error.response?.data,
-          status: error.response?.status
+          message: axiosError.message,
+          response: axiosError.response?.data,
+          status: axiosError.response?.status
         })
-        setErrors({ general: `Failed to load blog. ${error.message || 'Please try again.'}` })
+        setErrors({ general: `Failed to load blog. ${axiosError.message || 'Please try again.'}` })
       } finally {
         setIsLoading(false)
       }
@@ -150,12 +151,13 @@ export default function EditBlogPage() {
       // Redirect back to blog page
       router.push('/community/blog')
       
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error updating blog:', error)
       
       // Handle validation errors from backend
-      if (error.response?.data?.errors) {
-        setErrors(error.response.data.errors)
+      const axiosError = error as { response?: { data?: { errors?: Record<string, string> } } }
+      if (axiosError.response?.data?.errors) {
+        setErrors(axiosError.response.data.errors)
       } else {
         setErrors({ general: 'Failed to update blog post. Please try again.' })
       }

@@ -1,12 +1,13 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import Image from "next/image"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { Search } from "lucide-react"
 import { blogService, Blog } from "@/services/blog.service"
 import { useAuthContext } from "@/contexts/AuthContext"
+import SafeImage from "@/components/SafeImage"
 
 export default function BlogPage() {
   const router = useRouter()
@@ -32,7 +33,7 @@ export default function BlogPage() {
   ]
 
   // Fetch blogs based on filter
-  const fetchBlogs = async (filter: string) => {
+  const fetchBlogs = useCallback(async (filter: string) => {
     setLoading(true)
     setError("")
     try {
@@ -42,20 +43,20 @@ export default function BlogPage() {
       } else {
         response = await blogService.getAllBlogs()
       }
-      console.log('Fetched blogs:', response.blogs) // Debug log
       setBlogs(response.blogs)
-    } catch (err: any) {
-      setError(err.message || "Failed to fetch blogs")
+    } catch (err: unknown) {
+      const error = err as Error
+      setError(error.message || "Failed to fetch blogs")
       setBlogs([])
     } finally {
       setLoading(false)
     }
-  }
+  }, [isAuthenticated])
 
   // Load blogs on component mount and when filter changes
   useEffect(() => {
     fetchBlogs(selectedFilter)
-  }, [selectedFilter, isAuthenticated])
+  }, [selectedFilter, isAuthenticated, fetchBlogs])
 
   // Handle tab change
   const handleTabChange = (tab: string) => {
@@ -73,16 +74,6 @@ export default function BlogPage() {
     blog.body.toLowerCase().includes(searchQuery.toLowerCase()) ||
     blog.username.toLowerCase().includes(searchQuery.toLowerCase())
   )
-
-  // Debug function to log image URLs
-  const debugImageUrl = (blog: any, context: string) => {
-    console.log(`[${context}] Blog ID: ${blog.id}, Title: ${blog.title}`)
-    console.log(`[${context}] Image URL: "${blog.image_url}"`)
-    console.log(`[${context}] Image URL type: ${typeof blog.image_url}`)
-    console.log(`[${context}] Image URL value:`, blog.image_url)
-    console.log(`[${context}] Has valid image: ${hasValidImage(blog.image_url)}`)
-    console.log('---')
-  }
 
   // Format date
   const formatDate = (dateString: string) => {
@@ -103,6 +94,16 @@ export default function BlogPage() {
     return trimmedUrl !== '' && trimmedUrl !== 'null' && trimmedUrl !== 'undefined'
   }
 
+  // Handle image error
+  const handleImageError = (e: React.SyntheticEvent<HTMLImageElement>) => {
+    const target = e.target as HTMLImageElement
+    target.style.display = 'none'
+    const fallback = target.parentElement?.querySelector('.fallback-content') as HTMLElement
+    if (fallback) {
+      fallback.style.display = 'flex'
+    }
+  }
+
   // Handle delete blog
   const handleDeleteBlog = async (blogId: number) => {
     setDeleting(true)
@@ -112,7 +113,7 @@ export default function BlogPage() {
       // Refresh the blogs list
       await fetchBlogs(selectedFilter)
       setDeleteConfirm({ show: false, blogId: null, title: "" })
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Error deleting blog:', err)
       setDeleteError("Failed to delete blog. Please try again.")
     } finally {
@@ -298,9 +299,7 @@ export default function BlogPage() {
               </div>
             ) : (
               <div className="space-y-6">
-                {filteredBlogs.map((blog) => {
-                  debugImageUrl(blog, 'Explore Tab')
-                  return (
+                {filteredBlogs.map((blog) => (
                   <div 
                     key={blog.id} 
                     onClick={() => handleBlogClick(blog.id)}
@@ -366,18 +365,12 @@ export default function BlogPage() {
                         <div className="h-full bg-gradient-to-br from-green-100 to-green-200 flex items-center justify-center relative overflow-hidden group-hover:bg-gradient-to-br group-hover:from-green-200 group-hover:to-green-300 transition-all duration-300">
                           {hasValidImage(blog.image_url) && blog.image_url ? (
                             <>
-                              <img
+                              <SafeImage
                                 src={blog.image_url}
                                 alt="Blog post image"
-                                className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
-                                onError={(e) => {
-                                  const target = e.target as HTMLImageElement
-                                  target.style.display = 'none'
-                                  const fallback = target.parentElement?.querySelector('.fallback-content') as HTMLElement
-                                  if (fallback) {
-                                    fallback.style.display = 'flex'
-                                  }
-                                }}
+                                fill
+                                className="object-cover group-hover:scale-110 transition-transform duration-300"
+                                onError={handleImageError}
                               />
                               <div className="fallback-content absolute inset-0 items-center justify-center" style={{ display: 'none' }}>
                                 <div className="text-center">
@@ -406,8 +399,7 @@ export default function BlogPage() {
                       </div>
                     </div>
                   </div>
-                  )
-                })}
+                ))}
               </div>
             )}
           </div>
@@ -472,9 +464,7 @@ export default function BlogPage() {
                   </div>
                 ) : (
                   <div className="space-y-6">
-                    {filteredBlogs.map((blog) => {
-                      debugImageUrl(blog, 'My Blog Tab')
-                      return (
+                    {filteredBlogs.map((blog) => (
                       <div 
                         key={blog.id} 
                         onClick={() => handleBlogClick(blog.id)}
@@ -562,22 +552,12 @@ export default function BlogPage() {
                             <div className="h-full bg-gradient-to-br from-green-100 to-green-200 flex items-center justify-center relative overflow-hidden group-hover:bg-gradient-to-br group-hover:from-green-200 group-hover:to-green-300 transition-all duration-300">
                               {hasValidImage(blog.image_url) && blog.image_url ? (
                                 <>
-                                  <img
+                                  <SafeImage
                                     src={blog.image_url}
                                     alt="Blog post image"
-                                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
-                                    onError={(e) => {
-                                      console.log(`Image failed to load for blog ${blog.id}:`, blog.image_url)
-                                      const target = e.target as HTMLImageElement
-                                      target.style.display = 'none'
-                                      const fallback = target.parentElement?.querySelector('.fallback-content') as HTMLElement
-                                      if (fallback) {
-                                        fallback.style.display = 'flex'
-                                      }
-                                    }}
-                                    onLoad={() => {
-                                      console.log(`Image loaded successfully for blog ${blog.id}:`, blog.image_url)
-                                    }}
+                                    fill
+                                    className="object-cover group-hover:scale-110 transition-transform duration-300"
+                                    onError={handleImageError}
                                   />
                                   <div className="fallback-content absolute inset-0 items-center justify-center" style={{ display: 'none' }}>
                                     <div className="text-center">
@@ -606,8 +586,7 @@ export default function BlogPage() {
                           </div>
                         </div>
                       </div>
-                      )
-                    })}
+                    ))}
                   </div>
                 )}
               </div>
@@ -624,7 +603,7 @@ export default function BlogPage() {
               Delete Blog Post
             </h3>
             <p className="text-gray-600 mb-4">
-              Are you sure you want to delete "{deleteConfirm.title}"? This action cannot be undone.
+              Are you sure you want to delete &quot;{deleteConfirm.title}&quot;? This action cannot be undone.
             </p>
             
             {/* Delete Error */}

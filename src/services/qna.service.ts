@@ -70,16 +70,17 @@ export const qnaService = {
       }
       
       throw new Error('Invalid response format from server')
-    } catch (error: any) {
-      if (error.message === 'Question not found') {
-        throw error
+    } catch (error: unknown) {
+      const err = error as Error
+      if (err.message === 'Question not found') {
+        throw err
       }
       throw new Error('Failed to fetch question details')
     }
   },
 
   // Create a new question
-  createQuestion: async (questionData: CreateQuestionData): Promise<any> => {
+  createQuestion: async (questionData: CreateQuestionData): Promise<{ success: boolean; question?: Question }> => {
     const response = await apiClient.post('/community/qna/create/', questionData, {
       headers: {
         'Content-Type': 'application/json',
@@ -95,7 +96,7 @@ export const qnaService = {
   },
 
   // Submit an answer/comment to a question
-  submitAnswer: async (questionId: number, body: string): Promise<any> => {
+  submitAnswer: async (questionId: number, body: string): Promise<{ success: boolean; comment?: Comment }> => {
     try {
       console.log('Submitting answer with data:', { questionId, body })
       
@@ -105,11 +106,14 @@ export const qnaService = {
       
       console.log('Submit answer response:', response.data)
       return response.data
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error as { response?: { data?: unknown; status?: number } }
       console.error('Submit answer error details:', {
-        status: error.response?.status,
-        data: error.response?.data,
-        message: error.message,
+        questionId,
+        body,
+        status: err.response?.status,
+        data: err.response?.data,
+        message: (error as Error).message,
         endpoint: `/community/qna/${questionId}/comment/`
       })
       throw error
@@ -117,19 +121,19 @@ export const qnaService = {
   },
 
   // Like/thumbs up a question
-  thumbsUpQuestion: async (questionId: number): Promise<any> => {
+  thumbsUpQuestion: async (questionId: number): Promise<{ success: boolean; thumbs_up_count?: number }> => {
     const response = await apiClient.post(`/community/qna/comment/${questionId}/thumbs-up/`)
     return response.data
   },
 
   // Like/thumbs up a comment/answer
-  thumbsUpComment: async (commentId: number): Promise<any> => {
+  thumbsUpComment: async (commentId: number): Promise<{ success: boolean; thumbs_up_count?: number }> => {
     const response = await apiClient.post(`/community/qna/comment/${commentId}/thumbs-up/`)
     return response.data
   },
 
   // Close a question
-  closeQuestion: async (questionId: number): Promise<any> => {
+  closeQuestion: async (questionId: number): Promise<{ success: boolean; message?: string }> => {
     const response = await apiClient.post(`/community/qna/${questionId}/close/`)
     return response.data
   }

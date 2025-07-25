@@ -53,9 +53,10 @@ export default function CreateQuestionPage() {
     try {
       await qnaService.createQuestion(formData)
       router.push('/community/qna')
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Error creating question:', err)
-      setError(err.response?.data?.message || "Failed to create question. Please try again.")
+      const axiosError = err as { response?: { data?: { message?: string } } }
+      setError(axiosError.response?.data?.message || "Failed to create question. Please try again.")
     } finally {
       setIsSubmitting(false)
     }

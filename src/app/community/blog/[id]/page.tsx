@@ -24,9 +24,10 @@ export default function BlogDetailPage() {
         const response = await blogService.getBlogById(blogId)
         console.log('Blog response:', response)
         setBlog(response)
-      } catch (err: any) {
+      } catch (err: unknown) {
         console.error('Error fetching blog:', err)
-        setError(err.message || "Failed to fetch blog details")
+        const error = err as Error
+        setError(error.message || "Failed to fetch blog details")
       } finally {
         setLoading(false)
       }
@@ -253,10 +254,11 @@ export default function BlogDetailPage() {
             {hasValidImage(blog.image_url) && (
               <div className="mb-8">
                 <div className="relative w-full h-96 rounded-lg overflow-hidden">
-                  <img
+                  <Image
                     src={blog.image_url!}
                     alt="Blog featured image"
-                    className="w-full h-full object-cover"
+                    fill
+                    className="object-cover"
                     onError={(e) => {
                       const target = e.target as HTMLImageElement
                       target.style.display = 'none'

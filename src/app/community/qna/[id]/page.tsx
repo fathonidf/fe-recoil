@@ -1,19 +1,35 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { useParams, useRouter } from "next/navigation"
-import Image from "next/image"
 import Link from "next/link"
 import { qnaService, Question, Comment } from "@/services/qna.service"
 import { useAuthContext } from "@/contexts/AuthContext"
 
-interface Answer {
-  id: number
-  username: string
-  date_added: string
-  body: string
-  thumbs_up_count: number
-}
+// Mock answers data - replace with actual API call
+const mockAnswers: Comment[] = [
+  {
+    id: 1,
+    username: "Courier Girl",
+    date_added: "2025-07-20T00:00:00Z",
+    body: "Saya menerapkan algoritme Vehicle Routing Problem (VRP) sederhana dan memanfaatkan data live traffic API. Dengan pooling ke beberapa agen dan scheduling pickups di jam off-peak, biaya bahan bakar bisa ditekan hingga 20% sekaligus mempercepat waktu pengumpulan.",
+    thumbs_up_count: 40
+  },
+  {
+    id: 2,
+    username: "Courier Guy",
+    date_added: "2025-07-20T00:00:00Z",
+    body: "Gunakan model cost-sharing antar agen dalam zona yang sama, lalu aktifkan crowdshipping untuk order kecil. Integrasi Google Maps API memungkinkan dynamic rerouting saat kemacetan. Pastikan kendaraan sesuai volume rata-rata order harian untuk efisiensi maksimal.",
+    thumbs_up_count: 40
+  },
+  {
+    id: 3,
+    username: "Eco Manager",
+    date_added: "2025-07-20T00:00:00Z",
+    body: "Kelompokkan agen berdasarkan cluster zona, lalu terapkan threshold minimum 5 L sebelum trip. Jadwalkan pickups dua slot seminggu dan perbaiki estimasi pickup window. Hasilnya: biaya operasional turun 15%, sekaligus meningkatkan kepuasan karena jadwal lebih akurat.",
+    thumbs_up_count: 40
+  }
+]
 
 export default function QnADetailPage() {
   const params = useParams()
@@ -31,7 +47,7 @@ export default function QnADetailPage() {
   const { isAuthenticated } = useAuthContext()
 
   // Fetch comments function
-  const fetchComments = async () => {
+  const fetchComments = useCallback(async () => {
     setLoadingComments(true)
     try {
       console.log('Fetching comments for question ID:', questionId)
@@ -45,7 +61,7 @@ export default function QnADetailPage() {
         console.log('No comments found, using mock data')
         setAnswers(mockAnswers)
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Error fetching comments:', err)
       // Use mock data as fallback
       console.log('Using mock data as fallback')
@@ -53,32 +69,7 @@ export default function QnADetailPage() {
     } finally {
       setLoadingComments(false)
     }
-  }
-
-  // Mock answers data - replace with actual API call
-  const mockAnswers: Comment[] = [
-    {
-      id: 1,
-      username: "Courier Girl",
-      date_added: "2025-07-20T00:00:00Z",
-      body: "Saya menerapkan algoritme Vehicle Routing Problem (VRP) sederhana dan memanfaatkan data live traffic API. Dengan pooling ke beberapa agen dan scheduling pickups di jam off-peak, biaya bahan bakar bisa ditekan hingga 20% sekaligus mempercepat waktu pengumpulan.",
-      thumbs_up_count: 40
-    },
-    {
-      id: 2,
-      username: "Courier Guy",
-      date_added: "2025-07-20T00:00:00Z",
-      body: "Gunakan model cost-sharing antar agen dalam zona yang sama, lalu aktifkan crowdshipping untuk order kecil. Integrasi Google Maps API memungkinkan dynamic rerouting saat kemacetan. Pastikan kendaraan sesuai volume rata-rata order harian untuk efisiensi maksimal.",
-      thumbs_up_count: 40
-    },
-    {
-      id: 3,
-      username: "Eco Manager",
-      date_added: "2025-07-20T00:00:00Z",
-      body: "Kelompokkan agen berdasarkan cluster zona, lalu terapkan threshold minimum 5 L sebelum trip. Jadwalkan pickups dua slot seminggu dan perbaiki estimasi pickup window. Hasilnya: biaya operasional turun 15%, sekaligus meningkatkan kepuasan karena jadwal lebih akurat.",
-      thumbs_up_count: 40
-    }
-  ]
+  }, [questionId])
 
   useEffect(() => {
     const fetchQuestion = async () => {
@@ -87,9 +78,10 @@ export default function QnADetailPage() {
         const response = await qnaService.getQuestionById(questionId)
         console.log('Question response:', response)
         setQuestion(response)
-      } catch (err: any) {
+      } catch (err: unknown) {
         console.error('Error fetching question:', err)
-        setError(err.message || "Failed to fetch question details")
+        const error = err as Error
+        setError(error.message || "Failed to fetch question details")
       } finally {
         setLoading(false)
       }
@@ -103,7 +95,7 @@ export default function QnADetailPage() {
       setLoading(false)
       setLoadingComments(false)
     }
-  }, [questionId])
+  }, [questionId, fetchComments])
 
   // Format date
   const formatDate = (dateString: string) => {
@@ -155,9 +147,10 @@ export default function QnADetailPage() {
       // Refresh the comments/answers after successful submission
       await fetchComments()
       setNewAnswer("")
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error submitting answer:', error)
-      const errorMessage = error.response?.data?.message || error.response?.data?.detail || 'Failed to submit answer. Please try again.'
+      const axiosError = error as { response?: { data?: { message?: string; detail?: string } } }
+      const errorMessage = axiosError.response?.data?.message || axiosError.response?.data?.detail || 'Failed to submit answer. Please try again.'
       alert(errorMessage)
     } finally {
       setSubmittingAnswer(false)
